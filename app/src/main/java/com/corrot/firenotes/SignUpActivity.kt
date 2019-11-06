@@ -18,7 +18,7 @@ import kotlin.concurrent.schedule
 class SignUpActivity : AppCompatActivity() {
     companion object {
         @JvmField
-        val TAG: String = SignInActivity::class.java.simpleName
+        val TAG: String = SignUpActivity::class.java.simpleName
     }
 
     private lateinit var mAuth: FirebaseAuth

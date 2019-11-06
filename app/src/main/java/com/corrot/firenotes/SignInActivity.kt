@@ -60,16 +60,6 @@ class SignInActivity : AppCompatActivity() {
         signUpButton.setOnClickListener { openSignUpActivity() }
     }
 
-    override fun onStart() {
-        super.onStart()
-
-        // If user is not null (is logged in) open mainActivity
-        if (mAuth.currentUser != null) {
-            Log.d(TAG, "LOGGED AS: ${mAuth.currentUser!!.email.toString()}")
-            // openMainActivity()
-        }
-    }
-
     // Returns true if email and password are OK, else returns false.
     private fun validateEmailAndPassword(email: String, password: String): Boolean {
         when {
@@ -116,7 +106,7 @@ class SignInActivity : AppCompatActivity() {
                             signInButton,
                             "Logged in successfully", Snackbar.LENGTH_SHORT
                         ).show()
-                        Timer("Finish").schedule(1000) { openMainActivity() }
+                        Timer("Finish").schedule(1000) { finish() }
                     }
                     false -> {
                         Log.d(TAG, "signInWithEmail:false")
@@ -131,11 +121,6 @@ class SignInActivity : AppCompatActivity() {
             }
     }
 
-    private fun openMainActivity() {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-        startActivity(intent)
-    }
 
     private fun openSignUpActivity() {
         val intent = Intent(this, SignUpActivity::class.java)
