@@ -23,6 +23,7 @@ class SignInActivity : AppCompatActivity() {
     private lateinit var emailInputLayout: TextInputLayout
     private lateinit var passwordInputLayout: TextInputLayout
     private lateinit var signInButton: MaterialButton
+    private lateinit var signUpButton: MaterialButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,9 +31,10 @@ class SignInActivity : AppCompatActivity() {
 
         mAuth = FirebaseAuth.getInstance()
 
-        emailInputLayout = til_sing_in_email
-        passwordInputLayout = til_sing_in_password
+        emailInputLayout = til_sign_in_email
+        passwordInputLayout = til_sign_in_password
         signInButton = btn_sign_in
+        signUpButton = btn_open_sign_up
 
         signInButton.setOnClickListener {
             val email: String = emailInputLayout.editText!!.text.toString()
@@ -41,6 +43,11 @@ class SignInActivity : AppCompatActivity() {
             if (validateEmailAndPassword(email, password)) {
                 signIn(email, password)
             }
+        }
+
+        signUpButton.setOnClickListener {
+            val intent = Intent(this, SignUpActivity::class.java)
+            startActivity(intent)
         }
     }
 
