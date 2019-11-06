@@ -1,7 +1,9 @@
 package com.corrot.firenotes
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.util.Patterns
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
@@ -31,6 +33,15 @@ class SignInActivity : AppCompatActivity() {
         emailInputLayout = til_sing_in_email
         passwordInputLayout = til_sing_in_password
         signInButton = btn_sign_in
+
+        signInButton.setOnClickListener {
+            val email: String = emailInputLayout.editText!!.text.toString()
+            val password: String = passwordInputLayout.editText!!.text.toString()
+
+            if (validateEmailAndPassword(email, password)) {
+                signIn(email, password)
+            }
+        }
     }
 
     override fun onStart() {
@@ -38,11 +49,43 @@ class SignInActivity : AppCompatActivity() {
 
         // If user is not null (is logged in) open mainActivity
         mAuth.currentUser?.let {
-            finish()
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
         }
     }
 
-    fun signIn(email: String, password: String) {
+    // Returns true if email and password are OK, else returns false.
+    private fun validateEmailAndPassword(email: String, password: String): Boolean {
+        when {
+            email.isEmpty() -> {
+                emailInputLayout.error = "Email empty!"
+                emailInputLayout.requestFocus()
+                return false
+            }
+            !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
+                emailInputLayout.error = "Email is not valid!"
+                emailInputLayout.requestFocus()
+                return false
+            }
+        }
+
+        when {
+            password.isEmpty() -> {
+                passwordInputLayout.error = "Password empty!"
+                passwordInputLayout.requestFocus()
+                return false
+            }
+            password.length < 6 -> {
+                passwordInputLayout.error = "Password should be longer than 6 characters!"
+                passwordInputLayout.requestFocus()
+                return false
+            }
+        }
+
+        return true
+    }
+
+    private fun signIn(email: String, password: String) {
         mAuth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) {
                 when (it.isSuccessful) {
