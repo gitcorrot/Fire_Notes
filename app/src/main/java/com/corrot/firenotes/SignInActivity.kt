@@ -4,13 +4,17 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.util.Patterns
+import android.view.View
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
+import com.corrot.firenotes.utils.hideKeyboard
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import kotlinx.android.synthetic.main.activity_sign_in.*
+import java.util.*
+import kotlin.concurrent.schedule
 
 class SignInActivity : AppCompatActivity() {
     companion object {
@@ -24,6 +28,8 @@ class SignInActivity : AppCompatActivity() {
     private lateinit var passwordInputLayout: TextInputLayout
     private lateinit var signInButton: MaterialButton
     private lateinit var signUpButton: MaterialButton
+    private lateinit var shadow: View
+    private lateinit var progressBar: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,29 +41,32 @@ class SignInActivity : AppCompatActivity() {
         passwordInputLayout = til_sign_in_password
         signInButton = btn_sign_in
         signUpButton = btn_open_sign_up
+        shadow = v_sign_in_shadow
+        progressBar = pb_sign_in
 
         signInButton.setOnClickListener {
             val email: String = emailInputLayout.editText!!.text.toString()
             val password: String = passwordInputLayout.editText!!.text.toString()
 
+            it.hideKeyboard()
+
             if (validateEmailAndPassword(email, password)) {
+                shadow.visibility = View.VISIBLE
+                progressBar.visibility = View.VISIBLE
                 signIn(email, password)
             }
         }
 
-        signUpButton.setOnClickListener {
-            val intent = Intent(this, SignUpActivity::class.java)
-            startActivity(intent)
-        }
+        signUpButton.setOnClickListener { openSignUpActivity() }
     }
 
     override fun onStart() {
         super.onStart()
 
         // If user is not null (is logged in) open mainActivity
-        mAuth.currentUser?.let {
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
+        if (mAuth.currentUser != null) {
+            Log.d(TAG, "LOGGED AS: ${mAuth.currentUser!!.email.toString()}")
+            // openMainActivity()
         }
     }
 
@@ -74,6 +83,7 @@ class SignInActivity : AppCompatActivity() {
                 emailInputLayout.requestFocus()
                 return false
             }
+            else -> emailInputLayout.error = null
         }
 
         when {
@@ -87,6 +97,7 @@ class SignInActivity : AppCompatActivity() {
                 passwordInputLayout.requestFocus()
                 return false
             }
+            else -> passwordInputLayout.error = null
         }
 
         return true
@@ -94,24 +105,40 @@ class SignInActivity : AppCompatActivity() {
 
     private fun signIn(email: String, password: String) {
         mAuth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(this) {
-                when (it.isSuccessful) {
+            .addOnCompleteListener(this) { task ->
+                shadow.visibility = View.GONE
+                progressBar.visibility = View.GONE
+                when (task.isSuccessful) {
                     true -> {
                         Log.d(TAG, "signInWithEmail:success")
-                        val user: FirebaseUser = mAuth.currentUser!!
+//                        val user: FirebaseUser = mAuth.currentUser!!
                         Snackbar.make(
                             signInButton,
-                            "Logged in as ${user.displayName}", Snackbar.LENGTH_SHORT
+                            "Logged in successfully", Snackbar.LENGTH_SHORT
                         ).show()
+                        Timer("Finish").schedule(1000) { openMainActivity() }
                     }
                     false -> {
-                        // TODO: handle it
-                        Snackbar.make(
-                            signInButton,
-                            "Failed to log in", Snackbar.LENGTH_SHORT
-                        ).show()
+                        Log.d(TAG, "signInWithEmail:false")
+                        task.exception?.let { e ->
+                            Snackbar.make(
+                                signUpButton,
+                                "Failed. ${e.message}", Snackbar.LENGTH_LONG
+                            ).show()
+                        }
                     }
                 }
             }
+    }
+
+    private fun openMainActivity() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        startActivity(intent)
+    }
+
+    private fun openSignUpActivity() {
+        val intent = Intent(this, SignUpActivity::class.java)
+        startActivity(intent)
     }
 }
