@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity() {
 
         // If user is null (is not logged in) open signUpActivity
         if (mAuth.currentUser == null) {
-            val intent = Intent(this, SignInActivity::class.java)
+            val intent = Intent(this, AuthActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(intent)
         } else {
