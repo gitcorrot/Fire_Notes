@@ -9,5 +9,7 @@
     <string name="e_mail">E-mail</string>
     <string name="log_in">Log in</string>
     <string name="confirm_password">Confirm password</string>
+    <string name="title">Title</string>
+    <string name="note">Note</string>
 
 </resources>
