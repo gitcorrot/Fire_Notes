@@ -11,5 +11,8 @@
     <string name="confirm_password">Confirm password</string>
     <string name="title">Title</string>
     <string name="note">Note</string>
+    <string name="back">Back</string>
+    <string name="menu">menu</string>
+    <string name="more">more</string>
 
 </resources>
