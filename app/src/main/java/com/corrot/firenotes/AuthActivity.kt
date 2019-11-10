@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
+import com.corrot.firenotes.ui.SignInFragment
+import com.corrot.firenotes.ui.SignUpFragment
 import kotlinx.android.synthetic.main.activity_auth.*
 
 class AuthActivity : AppCompatActivity(),
