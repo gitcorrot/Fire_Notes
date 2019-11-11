@@ -31,7 +31,7 @@ class AuthActivity : AppCompatActivity(),
             .commit()
     }
 
-    // load signing up fragment
+    // load SignUpFragment
     override fun signUpClicked() {
         val signUpFragment = SignUpFragment()
         signUpFragment.setSignUpListener(this)
@@ -42,15 +42,9 @@ class AuthActivity : AppCompatActivity(),
             .commit()
     }
 
-    // If user signed up successfully load sign in fragment
+    // If user signed up successfully close this activity
     override fun signedUp() {
-        val signInFragment = SignInFragment()
-        signInFragment.setSignInListener(this)
-
-        val fragmentTransaction = fragmentManager.beginTransaction()
-        fragmentTransaction
-            .replace(fragmentContainer.id, signInFragment)
-            .commit()
+        finish()
     }
 
     // If user signed in successfully close this activity.

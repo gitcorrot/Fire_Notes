@@ -4,10 +4,10 @@ import android.os.Bundle
 import android.view.*
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
-import com.corrot.firenotes.FirebaseRepository
+import androidx.lifecycle.ViewModelProviders
 import com.corrot.firenotes.MainActivity
 import com.corrot.firenotes.R
-import com.corrot.firenotes.model.Note
+import com.corrot.firenotes.viewmodel.MainViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.android.synthetic.main.fragment_main.view.*
 
@@ -36,6 +36,10 @@ class MainFragment : Fragment() {
         toolbar.title = "Fire notes"
         (activity as MainActivity).setSupportActionBar(toolbar)
         setHasOptionsMenu(true)
+
+        val mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        // TODO: bind data to recyclerView
+//        mainViewModel.getAllNotes()
 
         fab = view.fab_main
         fab.setOnClickListener {

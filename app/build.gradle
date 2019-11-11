@@ -2,6 +2,8 @@ apply plugin: 'com.android.application'
 
 apply plugin: 'kotlin-android'
 
+apply plugin: 'kotlin-kapt'
+
 apply plugin: 'kotlin-android-extensions'
 
 apply plugin: 'com.google.gms.google-services'
@@ -42,4 +44,12 @@ dependencies {
 
     // Material Design
     implementation 'com.google.android.material:material:1.0.0'
+
+    // LiveData and ViewModel
+    kapt "androidx.lifecycle:lifecycle-compiler:2.1.0"
+    implementation "androidx.lifecycle:lifecycle-extensions:2.1.0"
+
+    // ViewModelScope
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0-rc02"
+
 }
