@@ -4,8 +4,10 @@ import android.os.Bundle
 import android.view.*
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
+import com.corrot.firenotes.FirebaseRepository
 import com.corrot.firenotes.MainActivity
 import com.corrot.firenotes.R
+import com.corrot.firenotes.model.Note
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.android.synthetic.main.fragment_main.view.*
 

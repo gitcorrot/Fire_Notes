@@ -128,9 +128,9 @@ class SignInFragment : Fragment() {
                             signInButton,
                             "Logged in successfully", Snackbar.LENGTH_SHORT
                         ).show()
-                        Timer("Finish").schedule(1000) {
-                            callback.done()
-                        }
+
+                        // Wait for user to read snackbar and finish.
+                        Timer("Finish").schedule(1000) { callback.done() }
                     }
                     false -> {
                         Log.d(TAG, "signInWithEmail:false")

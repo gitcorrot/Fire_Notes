@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
+import com.corrot.firenotes.FirebaseRepository
 import com.corrot.firenotes.R
 import com.corrot.firenotes.utils.hideKeyboard
 import com.google.android.material.button.MaterialButton
@@ -132,9 +133,14 @@ class SignUpFragment : Fragment() {
                             signUpButton,
                             "Signed up successfully", Snackbar.LENGTH_SHORT
                         ).show()
-                        Timer("Finish").schedule(1000) {
-                            callback.signedUp()
-                        }
+
+                        // Add user to database
+                        val firebaseRepository = FirebaseRepository()
+                        val user = mAuth.currentUser!!
+                        firebaseRepository.createUser(user.uid, user.email, user.displayName)
+
+                        // Wait for user to read snackbar and finish.
+                        Timer("Finish").schedule(1000) { callback.signedUp() }
                     }
                     false -> {
                         Log.d(TAG, "createUserWithEmail:false")
