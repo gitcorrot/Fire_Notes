@@ -4,8 +4,10 @@ import android.os.Bundle
 import android.view.*
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
+import com.corrot.firenotes.FirebaseRepository
 import com.corrot.firenotes.MainActivity
 import com.corrot.firenotes.R
+import com.corrot.firenotes.model.Note
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.android.synthetic.main.fragment_add_note.view.*
@@ -26,7 +28,7 @@ class AddNoteFragment : Fragment() {
 
     private lateinit var toolbar: Toolbar
     private lateinit var titleInputLayout: TextInputLayout
-    private lateinit var noteInputLayout: TextInputLayout
+    private lateinit var bodyInputLayout: TextInputLayout
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -41,7 +43,7 @@ class AddNoteFragment : Fragment() {
         setHasOptionsMenu(true)
 
         titleInputLayout = view.til_add_note_title
-        noteInputLayout = view.til_add_note_note
+        bodyInputLayout = view.til_add_note_body
 
         return view
     }
@@ -58,6 +60,17 @@ class AddNoteFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
+
+                // CREATE NOTE
+                val title = titleInputLayout.editText?.text.toString()
+                val body = bodyInputLayout.editText?.text.toString()
+                val note = Note(title)
+                note.body = body
+
+                // ADD NOTE TO DB
+                val firebaseRepository = FirebaseRepository()
+                firebaseRepository.addNoteToDatabase(note)
+
                 callback.backClicked()
                 true
             }
