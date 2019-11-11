@@ -1,12 +1,18 @@
 package com.corrot.firenotes.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import androidx.recyclerview.widget.StaggeredGridLayoutManager.VERTICAL
 import com.corrot.firenotes.MainActivity
 import com.corrot.firenotes.R
+import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.viewmodel.MainViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.android.synthetic.main.fragment_main.view.*
@@ -23,6 +29,9 @@ class MainFragment : Fragment() {
 
     private lateinit var callback: MainListener
     private lateinit var toolbar: Toolbar
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var layoutManager: StaggeredGridLayoutManager
+    private lateinit var notesAdapter: NotesAdapter
     private lateinit var fab: FloatingActionButton
 
     override fun onCreateView(
@@ -31,16 +40,27 @@ class MainFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_main, container, false)
 
+        // Setting Toolbar
         toolbar = view.toolbar_main as Toolbar
         toolbar.setNavigationIcon(R.drawable.ic_menu_white_24dp)
         toolbar.title = "Fire notes"
         (activity as MainActivity).setSupportActionBar(toolbar)
         setHasOptionsMenu(true)
 
-        val mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-        // TODO: bind data to recyclerView
-//        mainViewModel.getAllNotes()
+        // RecyclerView displaying notes
+        recyclerView = view.rv_main
+        layoutManager = StaggeredGridLayoutManager(2, VERTICAL)
+        recyclerView.layoutManager = layoutManager
+        notesAdapter = NotesAdapter(emptyList())
+        recyclerView.adapter = notesAdapter
 
+        val mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        mainViewModel.getAllNotes().observe(this, Observer<List<Note>> {
+            Log.d(TAG, "Updating notes adapter")
+            notesAdapter.setNotes(it)
+        })
+
+        // Floating Action Button
         fab = view.fab_main
         fab.setOnClickListener {
             callback.fabClicked()
