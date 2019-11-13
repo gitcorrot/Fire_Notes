@@ -31,44 +31,20 @@ class MainActivity : AppCompatActivity(),
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Fragments
-        fragmentManager = supportFragmentManager
-        fragmentContainer = fl_main_fragment_container
-
         // Firebase
         mAuth = FirebaseAuth.getInstance()
 
-        // On first activity creation load mainFragment
-        if (savedInstanceState == null) {
-            val mainFragment = MainFragment()
-            mainFragment.setMainListener(this)
-            fragmentManager.beginTransaction()
-                .add(fragmentContainer.id, mainFragment, Constants.MAIN_FRAGMENT_KEY)
-                .commit()
-        } else {
-            // If activity is recreated check for opened fragments
-            // Checking mainFragment
-            var fragment = fragmentManager.findFragmentByTag(Constants.MAIN_FRAGMENT_KEY)
-            if (fragment != null) {
-                (fragment as MainFragment).setMainListener(this)
-            } else {
-                // Checking addNoteFragment
-                fragment = fragmentManager.findFragmentByTag(Constants.ADD_NOTE_FRAGMENT_KEY)
-                if (fragment != null) {
-                    (fragment as AddNoteFragment).setAddNoteListener(this)
-                }
-            }
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
+        // Fragments
+        fragmentManager = supportFragmentManager
+        fragmentContainer = fl_main_fragment_container
 
         // If user is null (is not logged in) open signUpActivity
         if (mAuth.currentUser == null) {
             val intent = Intent(this, AuthActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(intent)
+            this.overridePendingTransition(0, 0)
+            finish()
         } else {
             val user: FirebaseUser = mAuth.currentUser!!
             Log.d(TAG, "LOGGED AS: ${user.email.toString()}")
@@ -76,6 +52,28 @@ class MainActivity : AppCompatActivity(),
                 fragmentContainer,
                 "Logged in as ${user.email}", Snackbar.LENGTH_SHORT
             ).show()
+
+            // On first activity creation load mainFragment
+            if (savedInstanceState == null) {
+                val mainFragment = MainFragment()
+                mainFragment.setMainListener(this)
+                fragmentManager.beginTransaction()
+                    .add(fragmentContainer.id, mainFragment, Constants.MAIN_FRAGMENT_KEY)
+                    .commit()
+            } else {
+                // If activity is recreated check for opened fragments
+                // Checking mainFragment
+                var fragment = fragmentManager.findFragmentByTag(Constants.MAIN_FRAGMENT_KEY)
+                if (fragment != null) {
+                    (fragment as MainFragment).setMainListener(this)
+                } else {
+                    // Checking addNoteFragment
+                    fragment = fragmentManager.findFragmentByTag(Constants.ADD_NOTE_FRAGMENT_KEY)
+                    if (fragment != null) {
+                        (fragment as AddNoteFragment).setAddNoteListener(this)
+                    }
+                }
+            }
         }
     }
 

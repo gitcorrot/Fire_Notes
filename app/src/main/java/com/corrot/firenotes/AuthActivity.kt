@@ -1,5 +1,6 @@
 package com.corrot.firenotes
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -44,11 +45,17 @@ class AuthActivity : AppCompatActivity(),
 
     // If user signed up successfully close this activity
     override fun signedUp() {
-        finish()
+        close()
     }
 
     // If user signed in successfully close this activity.
     override fun done() {
+        close()
+    }
+
+    private fun close() {
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
         finish()
     }
 }
