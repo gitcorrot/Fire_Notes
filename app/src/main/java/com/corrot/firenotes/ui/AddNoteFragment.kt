@@ -90,7 +90,7 @@ class AddNoteFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                // If title and body is not empty - add note to db
+                // If title or body is not empty - add note to db
                 if (!addNoteViewModel.getTitle().value.isNullOrEmpty()
                     || !addNoteViewModel.getBody().value.isNullOrEmpty()
                 ) {
