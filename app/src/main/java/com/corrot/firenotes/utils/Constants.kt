@@ -7,5 +7,9 @@ class Constants {
 
         const val MAIN_FRAGMENT_KEY = "mainFragment"
         const val ADD_NOTE_FRAGMENT_KEY = "addNoteFragment"
+
+        const val SAVE_STATE_TITLE = "saveStateTitle"
+        const val SAVE_STATE_BODY = "saveStateBody"
+        const val SAVE_STATE_COLOR = "saveStateColor"
     }
 }

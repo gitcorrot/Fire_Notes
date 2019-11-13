@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import com.corrot.firenotes.MainActivity
 import com.corrot.firenotes.R
+import com.corrot.firenotes.utils.Constants
 import com.corrot.firenotes.viewmodel.AddNoteViewModel
 import com.flask.colorpicker.ColorPickerView
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder
@@ -35,8 +36,7 @@ class AddNoteFragment : Fragment() {
     private lateinit var bodyInputLayout: TextInputLayout
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_add_note, container, false)
 
@@ -48,16 +48,27 @@ class AddNoteFragment : Fragment() {
 
         addNoteViewModel = AddNoteViewModel()
 
+        titleInputLayout = view.til_add_note_title
+        bodyInputLayout = view.til_add_note_body
+
         // Set color on change
         colorView = view.v_add_note_color
         addNoteViewModel.getColor().observe(this, Observer {
-            colorView.apply {
-                circleColor = it
-            }
+            colorView.apply { circleColor = it }
         })
 
-        titleInputLayout = view.til_add_note_title
-        bodyInputLayout = view.til_add_note_body
+        // Restore state
+        if (savedInstanceState != null) {
+            val title = savedInstanceState.getCharSequence(Constants.SAVE_STATE_TITLE).toString()
+            val body = savedInstanceState.getCharSequence(Constants.SAVE_STATE_BODY).toString()
+            val color = savedInstanceState.getInt(Constants.SAVE_STATE_COLOR)
+
+            addNoteViewModel.setTitle(title)
+            titleInputLayout.editText?.setText(title)
+            addNoteViewModel.setBody(body)
+            bodyInputLayout.editText?.setText(body)
+            addNoteViewModel.setColor(color)
+        }
 
         // Update user input
         titleInputLayout.editText?.addTextChangedListener {
@@ -68,13 +79,6 @@ class AddNoteFragment : Fragment() {
             addNoteViewModel.setBody(it.toString())
         }
 
-//        addNoteViewModel.getTitle().observe(this, Observer { title ->
-//            if (title.isNullOrEmpty()) {
-//                titleInputLayout.error = "Title can't be empty"
-//            } else {
-//                titleInputLayout.error = null
-//            }
-//        })
         return view
     }
 
@@ -126,5 +130,20 @@ class AddNoteFragment : Fragment() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        val title = addNoteViewModel.getTitle().value
+        val body = addNoteViewModel.getBody().value
+        val color = addNoteViewModel.getColor().value
+
+        if (title != null)
+            outState.putCharSequence(Constants.SAVE_STATE_TITLE, title)
+        if (body != null)
+            outState.putCharSequence(Constants.SAVE_STATE_BODY, body)
+        if (color != null)
+            outState.putInt(Constants.SAVE_STATE_COLOR, color)
+
+        super.onSaveInstanceState(outState)
     }
 }

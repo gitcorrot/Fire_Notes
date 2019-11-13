@@ -13,11 +13,10 @@ class AddNoteViewModel : ViewModel() {
         val TAG: String = AddNoteViewModel::class.java.simpleName
     }
 
-    val firebaseRepository = FirebaseRepository()
-
-    var titleLiveData = MutableLiveData<String>()
-    var bodyLiveData = MutableLiveData<String>()
-    var colorLiveData = MutableLiveData<Int>()
+    private val firebaseRepository = FirebaseRepository()
+    private var titleLiveData = MutableLiveData<String>()
+    private var bodyLiveData = MutableLiveData<String>()
+    private var colorLiveData = MutableLiveData<Int>()
 
     fun setTitle(title: String) {
         titleLiveData.value = title
@@ -28,8 +27,8 @@ class AddNoteViewModel : ViewModel() {
         return this.titleLiveData
     }
 
-    fun setBody(title: String) {
-        bodyLiveData.value = title
+    fun setBody(body: String) {
+        bodyLiveData.value = body
         bodyLiveData.notifyObserver()
     }
 
@@ -52,7 +51,6 @@ class AddNoteViewModel : ViewModel() {
         val color = getColor().value
         val date = Calendar.getInstance().timeInMillis
 
-        val firebaseRepository = FirebaseRepository()
         firebaseRepository.addNoteToDatabase(title, body, color, date)
     }
 }
