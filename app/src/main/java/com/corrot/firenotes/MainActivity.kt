@@ -4,11 +4,11 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.FrameLayout
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
 import com.corrot.firenotes.ui.AddNoteFragment
 import com.corrot.firenotes.ui.MainFragment
+import com.corrot.firenotes.utils.Constants
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -38,12 +38,27 @@ class MainActivity : AppCompatActivity(),
         // Firebase
         mAuth = FirebaseAuth.getInstance()
 
-        // On create activity load main fragment
-        val mainFragment = MainFragment()
-        mainFragment.setMainListener(this)
-        fragmentManager.beginTransaction()
-            .add(fragmentContainer.id, mainFragment)
-            .commit()
+        // On first activity creation load mainFragment
+        if (savedInstanceState == null) {
+            val mainFragment = MainFragment()
+            mainFragment.setMainListener(this)
+            fragmentManager.beginTransaction()
+                .add(fragmentContainer.id, mainFragment, Constants.MAIN_FRAGMENT_KEY)
+                .commit()
+        } else {
+            // If activity is recreated check for opened fragments
+            // Checking mainFragment
+            var fragment = fragmentManager.findFragmentByTag(Constants.MAIN_FRAGMENT_KEY)
+            if (fragment != null) {
+                (fragment as MainFragment).setMainListener(this)
+            } else {
+                // Checking addNoteFragment
+                fragment = fragmentManager.findFragmentByTag(Constants.ADD_NOTE_FRAGMENT_KEY)
+                if (fragment != null) {
+                    (fragment as AddNoteFragment).setAddNoteListener(this)
+                }
+            }
+        }
     }
 
     override fun onStart() {
@@ -65,20 +80,35 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun loadMainFragment() {
-        val mainFragment = MainFragment()
-        mainFragment.setMainListener(this)
-        fragmentManager.beginTransaction()
-            .replace(fragmentContainer.id, mainFragment)
-            .commit()
+        var mainFragment = fragmentManager.findFragmentByTag(Constants.MAIN_FRAGMENT_KEY)
+
+        if (mainFragment == null) {
+            mainFragment = MainFragment()
+            mainFragment.setMainListener(this)
+            fragmentManager.beginTransaction()
+                .replace(fragmentContainer.id, mainFragment, Constants.MAIN_FRAGMENT_KEY)
+                .commit()
+        } else {
+            (mainFragment as MainFragment).setMainListener(this)
+        }
+    }
+
+    private fun loadAddNoteFragment() {
+        var addNoteFragment = fragmentManager.findFragmentByTag(Constants.ADD_NOTE_FRAGMENT_KEY)
+
+        if (addNoteFragment == null) {
+            addNoteFragment = AddNoteFragment()
+            addNoteFragment.setAddNoteListener(this)
+            fragmentManager.beginTransaction()
+                .replace(fragmentContainer.id, addNoteFragment, Constants.ADD_NOTE_FRAGMENT_KEY)
+                .commit()
+        } else {
+            (addNoteFragment as AddNoteFragment).setAddNoteListener(this)
+        }
     }
 
     override fun fabClicked() {
-        Toast.makeText(this, "aaa", Toast.LENGTH_SHORT).show()
-        val addNoteFragment = AddNoteFragment()
-        addNoteFragment.setAddNoteListener(this)
-        fragmentManager.beginTransaction()
-            .replace(fragmentContainer.id, addNoteFragment)
-            .commit()
+        loadAddNoteFragment()
     }
 
     override fun noteAdded() {
