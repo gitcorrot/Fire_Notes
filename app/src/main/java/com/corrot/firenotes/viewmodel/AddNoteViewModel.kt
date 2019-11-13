@@ -4,7 +4,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.corrot.firenotes.FirebaseRepository
-import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.utils.notifyObserver
 import java.util.*
 
@@ -48,22 +47,12 @@ class AddNoteViewModel : ViewModel() {
     }
 
     fun addNoteToDatabase() {
-        // CREATE NOTE
-        val title = getTitle().value!! // Title is always not null there
-        val note = Note(title)
-
+        val title = getTitle().value
         val body = getBody().value
-        if (body != null)
-            note.body = body
-
         val color = getColor().value
-        if (color != null)
-            note.color = color
-
         val date = Calendar.getInstance().timeInMillis
-        note.lastChanged = date
 
         val firebaseRepository = FirebaseRepository()
-        firebaseRepository.addNoteToDatabase(note)
+        firebaseRepository.addNoteToDatabase(title, body, color, date)
     }
 }

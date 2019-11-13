@@ -13,7 +13,6 @@ import com.flask.colorpicker.ColorPickerView
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.mikhaellopez.circleview.CircleView
-import kotlinx.android.synthetic.main.fragment_add_note.*
 import kotlinx.android.synthetic.main.fragment_add_note.view.*
 
 class AddNoteFragment : Fragment() {
@@ -69,13 +68,13 @@ class AddNoteFragment : Fragment() {
             addNoteViewModel.setBody(it.toString())
         }
 
-        addNoteViewModel.getTitle().observe(this, Observer { title ->
-            if (title.isNullOrEmpty()) {
-                til_add_note_title.error = "Title can't be empty"
-            } else {
-                til_add_note_title.error = null
-            }
-        })
+//        addNoteViewModel.getTitle().observe(this, Observer { title ->
+//            if (title.isNullOrEmpty()) {
+//                titleInputLayout.error = "Title can't be empty"
+//            } else {
+//                titleInputLayout.error = null
+//            }
+//        })
         return view
     }
 
@@ -91,14 +90,14 @@ class AddNoteFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                // ADD NOTE TO DB
-                // TODO: validate data
-                if (addNoteViewModel.getTitle().value.isNullOrEmpty()) {
-                    titleInputLayout.requestFocus()
-                } else {
+                // If title and body is not empty - add note to db
+                if (!addNoteViewModel.getTitle().value.isNullOrEmpty()
+                    && !addNoteViewModel.getBody().value.isNullOrEmpty()
+                ) {
                     addNoteViewModel.addNoteToDatabase()
-                    callback.backClicked()
                 }
+
+                callback.backClicked()
                 true
             }
             R.id.action_set_color -> {

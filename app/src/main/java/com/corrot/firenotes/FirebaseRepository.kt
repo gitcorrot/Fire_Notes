@@ -42,7 +42,12 @@ class FirebaseRepository {
             }
     }
 
-    fun addNoteToDatabase(note: Note) {
+    fun addNoteToDatabase(
+        title: String?,
+        body: String?,
+        color: Int?,
+        lastChanged: Long?
+    ) {
         auth.uid?.let { uid ->
             val ref = database
                 .reference
@@ -50,7 +55,11 @@ class FirebaseRepository {
                 .child(uid)
                 .push()
 
-            note.id = ref.key
+            val note = Note(ref.key!!) // TODO: always non-null?
+            note.title = title
+            note.body = body
+            note.color = color
+            note.lastChanged = lastChanged
 
             ref.setValue(note)
                 .addOnCompleteListener { result ->
