@@ -44,12 +44,15 @@ class FirebaseRepository {
 
     fun addNoteToDatabase(note: Note) {
         auth.uid?.let { uid ->
-            database
+            val ref = database
                 .reference
                 .child(Constants.NOTE_KEY)
                 .child(uid)
                 .push()
-                .setValue(note)
+
+            note.id = ref.key
+
+            ref.setValue(note)
                 .addOnCompleteListener { result ->
                     when (result.isSuccessful) {
                         true -> {

@@ -24,7 +24,7 @@
         app:cv_border="true"
         app:cv_border_color="#353535"
         app:cv_border_width="2dp"
-        app:layout_constraintBottom_toBottomOf="@+id/til_add_note_title"
+        app:layout_constraintBottom_toTopOf="@+id/til_add_note_body"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/til_add_note_title" />
 
@@ -32,13 +32,14 @@
         android:id="@+id/til_add_note_title"
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="0dp"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
         android:layout_margin="8dp"
         app:layout_constraintEnd_toStartOf="@+id/v_add_note_color"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/toolbar_add_note">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/aaaaaa"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:hint="@string/title"

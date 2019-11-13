@@ -3,17 +3,17 @@ package com.corrot.firenotes.ui
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.widget.Toolbar
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import com.corrot.firenotes.FirebaseRepository
 import com.corrot.firenotes.MainActivity
 import com.corrot.firenotes.R
-import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.viewmodel.AddNoteViewModel
 import com.flask.colorpicker.ColorPickerView
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
 import com.mikhaellopez.circleview.CircleView
+import kotlinx.android.synthetic.main.fragment_add_note.*
 import kotlinx.android.synthetic.main.fragment_add_note.view.*
 
 class AddNoteFragment : Fragment() {
@@ -49,6 +49,7 @@ class AddNoteFragment : Fragment() {
 
         addNoteViewModel = AddNoteViewModel()
 
+        // Set color on change
         colorView = view.v_add_note_color
         addNoteViewModel.getColor().observe(this, Observer {
             colorView.apply {
@@ -59,6 +60,22 @@ class AddNoteFragment : Fragment() {
         titleInputLayout = view.til_add_note_title
         bodyInputLayout = view.til_add_note_body
 
+        // Update user input
+        titleInputLayout.editText?.addTextChangedListener {
+            addNoteViewModel.setTitle(it.toString())
+        }
+
+        bodyInputLayout.editText?.addTextChangedListener {
+            addNoteViewModel.setBody(it.toString())
+        }
+
+        addNoteViewModel.getTitle().observe(this, Observer { title ->
+            if (title.isNullOrEmpty()) {
+                til_add_note_title.error = "Title can't be empty"
+            } else {
+                til_add_note_title.error = null
+            }
+        })
         return view
     }
 
@@ -74,18 +91,14 @@ class AddNoteFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-
-                // CREATE NOTE
-                val title = titleInputLayout.editText?.text.toString()
-                val body = bodyInputLayout.editText?.text.toString()
-                val note = Note(title)
-                note.body = body
-
                 // ADD NOTE TO DB
-                val firebaseRepository = FirebaseRepository()
-                firebaseRepository.addNoteToDatabase(note)
-
-                callback.backClicked()
+                // TODO: validate data
+                if (addNoteViewModel.getTitle().value.isNullOrEmpty()) {
+                    titleInputLayout.requestFocus()
+                } else {
+                    addNoteViewModel.addNoteToDatabase()
+                    callback.backClicked()
+                }
                 true
             }
             R.id.action_set_color -> {

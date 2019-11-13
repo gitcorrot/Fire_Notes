@@ -60,6 +60,7 @@ class MainViewModel : ViewModel() {
                 }
 
                 override fun onCancelled(e: DatabaseError) {
+                    setLoading(false)
                     Log.d(TAG, "Error during loading notes: ${e.message}")
                 }
             })

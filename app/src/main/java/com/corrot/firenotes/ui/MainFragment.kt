@@ -16,6 +16,7 @@ import com.corrot.firenotes.R
 import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.viewmodel.MainViewModel
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_main.view.*
 
 class MainFragment : Fragment() {
@@ -60,6 +61,7 @@ class MainFragment : Fragment() {
         val mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         mainViewModel.getAllNotes().observe(this, Observer<List<Note>> {
             Log.d(TAG, "Updating notes adapter")
+            Snackbar.make(recyclerView, "Found ${it.size} notes", Snackbar.LENGTH_SHORT).show()
             notesAdapter.setNotes(it)
         })
 
