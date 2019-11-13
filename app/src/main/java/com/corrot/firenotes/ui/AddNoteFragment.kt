@@ -4,12 +4,16 @@ import android.os.Bundle
 import android.view.*
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import com.corrot.firenotes.FirebaseRepository
 import com.corrot.firenotes.MainActivity
 import com.corrot.firenotes.R
 import com.corrot.firenotes.model.Note
+import com.corrot.firenotes.viewmodel.AddNoteViewModel
+import com.flask.colorpicker.ColorPickerView
+import com.flask.colorpicker.builder.ColorPickerDialogBuilder
 import com.google.android.material.textfield.TextInputLayout
-import com.google.firebase.auth.FirebaseAuth
+import com.mikhaellopez.circleview.CircleView
 import kotlinx.android.synthetic.main.fragment_add_note.view.*
 
 class AddNoteFragment : Fragment() {
@@ -23,10 +27,11 @@ class AddNoteFragment : Fragment() {
         fun backClicked()
     }
 
-    private lateinit var mAuth: FirebaseAuth
     private lateinit var callback: AddNoteListener
+    private lateinit var addNoteViewModel: AddNoteViewModel
 
     private lateinit var toolbar: Toolbar
+    private lateinit var colorView: CircleView
     private lateinit var titleInputLayout: TextInputLayout
     private lateinit var bodyInputLayout: TextInputLayout
 
@@ -41,6 +46,15 @@ class AddNoteFragment : Fragment() {
         toolbar.title = "Add note"
         (activity as MainActivity).setSupportActionBar(toolbar)
         setHasOptionsMenu(true)
+
+        addNoteViewModel = AddNoteViewModel()
+
+        colorView = view.v_add_note_color
+        addNoteViewModel.getColor().observe(this, Observer {
+            colorView.apply {
+                circleColor = it
+            }
+        })
 
         titleInputLayout = view.til_add_note_title
         bodyInputLayout = view.til_add_note_body
@@ -75,7 +89,27 @@ class AddNoteFragment : Fragment() {
                 true
             }
             R.id.action_set_color -> {
-                // TODO: set note color
+                // Set default color
+                var color = resources.getColor(R.color.colorAccent)
+
+                ColorPickerDialogBuilder
+                    .with(titleInputLayout.context)
+                    .setTitle("Choose color")
+                    .wheelType(ColorPickerView.WHEEL_TYPE.CIRCLE)
+                    .showBorder(true)
+                    .showColorPreview(true)
+                    .density(8)
+                    .noSliders()
+                    .initialColor(color)
+                    .setOnColorChangedListener { color = it }
+                    .setPositiveButton("Ok") { _, _, _ ->
+                        addNoteViewModel.setColor(color = color)
+                    }
+                    .setNegativeButton("Cancel") { dialog, _ ->
+                        dialog.cancel()
+                    }
+                    .build()
+                    .show()
                 true
             }
             else -> super.onOptionsItemSelected(item)

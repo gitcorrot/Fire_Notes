@@ -52,4 +52,9 @@ dependencies {
     // ViewModelScope
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0-rc02"
 
+    // Color Picker (https://github.com/QuadFlask/colorpicker)
+    implementation 'com.github.QuadFlask:colorpicker:0.0.15'
+
+    // CircleView (https://github.com/lopspower/CircleView)
+    implementation 'com.mikhaellopez:circleview:1.3.1'
 }
