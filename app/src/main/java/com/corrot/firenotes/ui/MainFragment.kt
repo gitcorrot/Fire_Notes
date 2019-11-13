@@ -3,6 +3,7 @@ package com.corrot.firenotes.ui
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import android.widget.ProgressBar
 import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -33,6 +34,8 @@ class MainFragment : Fragment() {
     private lateinit var layoutManager: StaggeredGridLayoutManager
     private lateinit var notesAdapter: NotesAdapter
     private lateinit var fab: FloatingActionButton
+    private lateinit var shadow: View
+    private lateinit var progressBar: ProgressBar
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -58,6 +61,22 @@ class MainFragment : Fragment() {
         mainViewModel.getAllNotes().observe(this, Observer<List<Note>> {
             Log.d(TAG, "Updating notes adapter")
             notesAdapter.setNotes(it)
+        })
+
+        // Show / Hide loading bar
+        shadow = view.v_main_shadow
+        progressBar = view.pb_main
+        mainViewModel.isLoading().observe(this, Observer {
+            when (it) {
+                true -> {
+                    shadow.visibility = View.VISIBLE
+                    progressBar.visibility = View.VISIBLE
+                }
+                false -> {
+                    shadow.visibility = View.GONE
+                    progressBar.visibility = View.GONE
+                }
+            }
         })
 
         // Floating Action Button
