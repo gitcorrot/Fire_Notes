@@ -23,8 +23,10 @@
 - notes
 	- uid
 		- id
+			- id
 			- title
 			- body
+			- color
 			- last changed date
 
 ------------
