@@ -92,7 +92,7 @@ class AddNoteFragment : Fragment() {
             android.R.id.home -> {
                 // If title and body is not empty - add note to db
                 if (!addNoteViewModel.getTitle().value.isNullOrEmpty()
-                    && !addNoteViewModel.getBody().value.isNullOrEmpty()
+                    || !addNoteViewModel.getBody().value.isNullOrEmpty()
                 ) {
                     addNoteViewModel.addNoteToDatabase()
                 }
