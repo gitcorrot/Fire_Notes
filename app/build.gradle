@@ -43,7 +43,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-database:19.2.0'
 
     // Material Design
-    implementation 'com.google.android.material:material:1.0.0'
+    implementation 'com.google.android.material:material:1.2.0-alpha01'
 
     // LiveData and ViewModel
     kapt "androidx.lifecycle:lifecycle-compiler:2.1.0"

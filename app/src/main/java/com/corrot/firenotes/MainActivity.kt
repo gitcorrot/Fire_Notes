@@ -9,7 +9,6 @@ import androidx.fragment.app.FragmentManager
 import com.corrot.firenotes.ui.AddNoteFragment
 import com.corrot.firenotes.ui.MainFragment
 import com.corrot.firenotes.utils.Constants
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.android.synthetic.main.activity_main.*
@@ -48,10 +47,6 @@ class MainActivity : AppCompatActivity(),
         } else {
             val user: FirebaseUser = mAuth.currentUser!!
             Log.d(TAG, "LOGGED AS: ${user.email.toString()}")
-            Snackbar.make(
-                fragmentContainer,
-                "Logged in as ${user.email}", Snackbar.LENGTH_SHORT
-            ).show()
 
             // On first activity creation load mainFragment
             if (savedInstanceState == null) {

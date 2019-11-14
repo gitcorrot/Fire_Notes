@@ -10,8 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:backgroundTint="@color/colorPrimary"
-        android:elevation="4dp"
+        android:backgroundTint="?attr/colorPrimary"
         android:theme="@style/Widget.MaterialComponents.BottomAppBar"
         app:fabAlignmentMode="end" />
 
@@ -20,7 +19,7 @@
         style="@style/Widget.MaterialComponents.FloatingActionButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_create_white_24dp"
+        android:src="@drawable/ic_done_24dp"
         app:layout_anchor="@id/toolbar_add_note" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -34,7 +33,7 @@
             android:layout_height="30dp"
             android:layout_marginEnd="8dp"
             app:cv_border="true"
-            app:cv_border_color="#353535"
+            app:cv_border_color="?attr/colorOnSurface"
             app:cv_border_width="2dp"
             app:layout_constraintBottom_toTopOf="@+id/til_add_note_body"
             app:layout_constraintEnd_toEndOf="parent"
