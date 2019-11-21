@@ -1,7 +1,10 @@
 package com.corrot.firenotes.ui
 
+import android.app.AlertDialog
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.*
+import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -12,9 +15,10 @@ import com.corrot.firenotes.utils.Constants
 import com.corrot.firenotes.viewmodel.AddNoteViewModel
 import com.flask.colorpicker.ColorPickerView
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputLayout
-import com.mikhaellopez.circleview.CircleView
 import kotlinx.android.synthetic.main.fragment_add_note.view.*
+
 
 class AddNoteFragment : Fragment() {
     companion object {
@@ -31,14 +35,16 @@ class AddNoteFragment : Fragment() {
     private lateinit var addNoteViewModel: AddNoteViewModel
 
     private lateinit var toolbar: Toolbar
-    private lateinit var colorView: CircleView
+    private lateinit var colorView: View
     private lateinit var titleInputLayout: TextInputLayout
     private lateinit var bodyInputLayout: TextInputLayout
+    private lateinit var fab: FloatingActionButton
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-        val view = inflater.inflate(R.layout.fragment_add_note, container, false)
+        val view =
+            inflater.inflate(R.layout.fragment_add_note, container, false)
 
         toolbar = view.toolbar_add_note as Toolbar
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp)
@@ -50,23 +56,35 @@ class AddNoteFragment : Fragment() {
 
         titleInputLayout = view.til_add_note_title
         bodyInputLayout = view.til_add_note_body
+        fab = view.fab_add_note
 
         // Set color on change
-        colorView = view.v_add_note_color
-        addNoteViewModel.getColor().observe(this, Observer {
-            colorView.apply { circleColor = it }
+        colorView = view.v_note_color
+
+        // Passing Fragment's view as LifecycleOwner to avoid memory leaks
+        addNoteViewModel.getColor().observe(viewLifecycleOwner, Observer {
+            val shape = colorView.background as GradientDrawable
+            shape.setColor(it)
         })
 
         // Restore state
         if (savedInstanceState != null) {
-            val title = savedInstanceState.getCharSequence(Constants.SAVE_STATE_TITLE).toString()
-            val body = savedInstanceState.getCharSequence(Constants.SAVE_STATE_BODY).toString()
+            val title = savedInstanceState.getCharSequence(Constants.SAVE_STATE_TITLE)
+            val body = savedInstanceState.getCharSequence(Constants.SAVE_STATE_BODY)
             val color = savedInstanceState.getInt(Constants.SAVE_STATE_COLOR)
 
-            addNoteViewModel.setTitle(title)
-            titleInputLayout.editText?.setText(title)
-            addNoteViewModel.setBody(body)
-            bodyInputLayout.editText?.setText(body)
+            if (!title.isNullOrEmpty()) {
+                addNoteViewModel.setTitle(title.toString())
+                titleInputLayout.editText?.setText(title)
+            }
+            if (!body.isNullOrEmpty()) {
+                addNoteViewModel.setBody(body.toString())
+                bodyInputLayout.editText?.setText(body)
+            }
+            addNoteViewModel.setColor(color)
+        } else {
+            // Set default color
+            val color = colorView.context.getColor(R.color.colorSecondary)
             addNoteViewModel.setColor(color)
         }
 
@@ -77,6 +95,20 @@ class AddNoteFragment : Fragment() {
 
         bodyInputLayout.editText?.addTextChangedListener {
             addNoteViewModel.setBody(it.toString())
+        }
+
+        // Save on FAB clicked
+        fab.setOnClickListener {
+            // If title or body is not empty - add note to db
+            if (!addNoteViewModel.getTitle().value.isNullOrEmpty()
+                || !addNoteViewModel.getBody().value.isNullOrEmpty()
+            ) {
+                addNoteViewModel.addNoteToDatabase()
+                callback.backClicked()
+            } else {
+//                Snackbar.make(toolbar, "Empty note", Snackbar.LENGTH_SHORT).show()
+                Toast.makeText(context, "Can't add empty note", Toast.LENGTH_SHORT).show()
+            }
         }
 
         return view
@@ -94,19 +126,29 @@ class AddNoteFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                // If title or body is not empty - add note to db
                 if (!addNoteViewModel.getTitle().value.isNullOrEmpty()
                     || !addNoteViewModel.getBody().value.isNullOrEmpty()
                 ) {
-                    addNoteViewModel.addNoteToDatabase()
+                    val dialogBuilder = AlertDialog.Builder(toolbar.context)
+                    with(dialogBuilder) {
+                        setTitle("Do you want to discard?")
+                        setMessage("Changes will not be saved")
+                        setPositiveButton("Yes") { _, _ ->
+                            callback.backClicked()
+                        }
+                        setNeutralButton("Cancel", null)
+                        show()
+                    }
+                } else {
+                    callback.backClicked()
                 }
 
-                callback.backClicked()
                 true
             }
             R.id.action_set_color -> {
                 // Set default color
-                var color = resources.getColor(R.color.colorAccent)
+                var color = colorView.context.getColor(R.color.colorSecondary)
+                addNoteViewModel.setColor(color)
 
                 ColorPickerDialogBuilder
                     .with(titleInputLayout.context)

@@ -27,25 +27,39 @@
         android:layout_height="match_parent"
         android:layout_marginBottom="100dp">
 
-        <com.mikhaellopez.circleview.CircleView
-            android:id="@+id/v_add_note_color"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+        <View
+            android:id="@+id/v_note_color"
+            android:layout_width="15dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="4dp"
+            android:layout_marginTop="4dp"
             android:layout_marginEnd="8dp"
-            app:cv_border="true"
-            app:cv_border_color="?attr/colorOnSurface"
-            app:cv_border_width="2dp"
+            android:background="@drawable/shape_color"
             app:layout_constraintBottom_toTopOf="@+id/til_add_note_body"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/til_add_note_title"
             app:layout_constraintTop_toTopOf="@+id/til_add_note_title" />
+
+<!--        <com.mikhaellopez.circleview.CircleView-->
+<!--            android:id="@+id/v_add_note_color"-->
+<!--            android:layout_width="30dp"-->
+<!--            android:layout_height="30dp"-->
+<!--            android:layout_marginEnd="8dp"-->
+<!--            app:cv_border="true"-->
+<!--            app:cv_border_color="?attr/colorOnSurface"-->
+<!--            app:cv_border_width="2dp"-->
+<!--            app:layout_constraintBottom_toTopOf="@+id/til_add_note_body"-->
+<!--            app:layout_constraintEnd_toEndOf="parent"-->
+<!--            app:layout_constraintTop_toTopOf="@+id/til_add_note_title" />-->
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_add_note_title"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            app:layout_constraintEnd_toStartOf="@+id/v_add_note_color"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toStartOf="@id/v_note_color"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
