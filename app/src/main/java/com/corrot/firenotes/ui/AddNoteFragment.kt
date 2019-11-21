@@ -1,6 +1,5 @@
 package com.corrot.firenotes.ui
 
-import android.app.AlertDialog
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.*
@@ -15,6 +14,7 @@ import com.corrot.firenotes.utils.Constants
 import com.corrot.firenotes.viewmodel.AddNoteViewModel
 import com.flask.colorpicker.ColorPickerView
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.android.synthetic.main.fragment_add_note.view.*
@@ -162,14 +162,13 @@ class AddNoteFragment : Fragment() {
         if (!addNoteViewModel.getTitle().value.isNullOrEmpty()
             || !addNoteViewModel.getBody().value.isNullOrEmpty()
         ) {
-            val dialogBuilder = AlertDialog.Builder(toolbar.context)
+            val dialogBuilder = MaterialAlertDialogBuilder(toolbar.context)
             with(dialogBuilder) {
-                setTitle("Do you want to discard?")
-                setMessage("Changes will not be saved")
-                setPositiveButton("Yes") { _, _ ->
+                setTitle("Discard note?")
+                setPositiveButton("Discard") { _, _ ->
                     callback.backClicked()
                 }
-                setNeutralButton("Cancel", null)
+                setNegativeButton("Cancel", null)
                 show()
             }
         } else {
