@@ -116,4 +116,15 @@ class MainActivity : AppCompatActivity(),
     override fun backClicked() {
         loadMainFragment()
     }
+
+    override fun onBackPressed() {
+        if (fragmentManager.backStackEntryCount > 0) {
+            val addNoteFragment = fragmentManager.findFragmentByTag(Constants.ADD_NOTE_FRAGMENT_KEY)
+            if (addNoteFragment != null) {
+                (addNoteFragment as AddNoteFragment).back()
+            }
+        } else {
+            super.onBackPressed()
+        }
+    }
 }

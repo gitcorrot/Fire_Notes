@@ -126,23 +126,7 @@ class AddNoteFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                if (!addNoteViewModel.getTitle().value.isNullOrEmpty()
-                    || !addNoteViewModel.getBody().value.isNullOrEmpty()
-                ) {
-                    val dialogBuilder = AlertDialog.Builder(toolbar.context)
-                    with(dialogBuilder) {
-                        setTitle("Do you want to discard?")
-                        setMessage("Changes will not be saved")
-                        setPositiveButton("Yes") { _, _ ->
-                            callback.backClicked()
-                        }
-                        setNeutralButton("Cancel", null)
-                        show()
-                    }
-                } else {
-                    callback.backClicked()
-                }
-
+                back()
                 true
             }
             R.id.action_set_color -> {
@@ -171,6 +155,25 @@ class AddNoteFragment : Fragment() {
                 true
             }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    fun back() {
+        if (!addNoteViewModel.getTitle().value.isNullOrEmpty()
+            || !addNoteViewModel.getBody().value.isNullOrEmpty()
+        ) {
+            val dialogBuilder = AlertDialog.Builder(toolbar.context)
+            with(dialogBuilder) {
+                setTitle("Do you want to discard?")
+                setMessage("Changes will not be saved")
+                setPositiveButton("Yes") { _, _ ->
+                    callback.backClicked()
+                }
+                setNeutralButton("Cancel", null)
+                show()
+            }
+        } else {
+            callback.backClicked()
         }
     }
 
