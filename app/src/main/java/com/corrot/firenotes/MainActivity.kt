@@ -82,6 +82,10 @@ class MainActivity : AppCompatActivity(),
                 .replace(fragmentContainer.id, mainFragment, Constants.MAIN_FRAGMENT_KEY)
                 .commit()
         } else {
+            fragmentManager.popBackStack(
+                Constants.ADD_NOTE_FRAGMENT_KEY,
+                FragmentManager.POP_BACK_STACK_INCLUSIVE
+            )
             (mainFragment as MainFragment).setMainListener(this)
         }
     }
@@ -94,6 +98,7 @@ class MainActivity : AppCompatActivity(),
             addNoteFragment.setAddNoteListener(this)
             fragmentManager.beginTransaction()
                 .replace(fragmentContainer.id, addNoteFragment, Constants.ADD_NOTE_FRAGMENT_KEY)
+                .addToBackStack(Constants.ADD_NOTE_FRAGMENT_KEY)
                 .commit()
         } else {
             (addNoteFragment as AddNoteFragment).setAddNoteListener(this)
