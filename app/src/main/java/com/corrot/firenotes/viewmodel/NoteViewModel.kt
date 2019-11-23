@@ -7,10 +7,10 @@ import com.corrot.firenotes.FirebaseRepository
 import com.corrot.firenotes.utils.notifyObserver
 import java.util.*
 
-class AddNoteViewModel : ViewModel() {
+class NoteViewModel : ViewModel() {
     companion object {
         @JvmField
-        val TAG: String = AddNoteViewModel::class.java.simpleName
+        val TAG: String = NoteViewModel::class.java.simpleName
     }
 
     private val firebaseRepository = FirebaseRepository()

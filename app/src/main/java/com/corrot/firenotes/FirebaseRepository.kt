@@ -36,7 +36,7 @@ class FirebaseRepository {
                     }
                     false -> {
                         // TODO: result failed
-                        Log.d(TAG, "createUser:failed")
+                        Log.e(TAG, "createUser:failed")
                     }
                 }
             }
@@ -70,7 +70,7 @@ class FirebaseRepository {
                         }
                         false -> {
                             // TODO: result failed
-                            Log.d(TAG, "addNoteToDatabase:failed")
+                            Log.e(TAG, "addNoteToDatabase:failed")
                         }
                     }
                 }

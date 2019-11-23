@@ -6,9 +6,11 @@ import android.util.Log
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
-import com.corrot.firenotes.ui.AddNoteFragment
+import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.ui.MainFragment
 import com.corrot.firenotes.utils.Constants
+import com.google.android.material.bottomappbar.BottomAppBar
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.mikepenz.materialdrawer.AccountHeaderBuilder
@@ -20,7 +22,6 @@ import com.mikepenz.materialdrawer.model.ProfileDrawerItem
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(),
-    AddNoteFragment.AddNoteListener,
     MainFragment.MainListener {
 
     companion object {
@@ -32,6 +33,8 @@ class MainActivity : AppCompatActivity(),
     private lateinit var fragmentManager: FragmentManager
     private lateinit var fragmentContainer: FrameLayout
     private lateinit var drawer: Drawer
+    private lateinit var toolbar: BottomAppBar
+    private lateinit var fab: FloatingActionButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,11 +58,24 @@ class MainActivity : AppCompatActivity(),
             val user: FirebaseUser = mAuth.currentUser!!
             Log.d(TAG, "LOGGED AS: ${user.email.toString()}")
 
-            createDriver(user)
+            // Setting Toolbar
+            toolbar = toolbar_main as BottomAppBar
+            toolbar.setNavigationIcon(R.drawable.ic_menu_white_24dp)
+            toolbar.title = "Fire notes"
+            setSupportActionBar(toolbar)
+
+            // Create drawer
+            createDrawer(user)
+
+            // Floating Action Button
+            fab = fab_main
+            fab.setOnClickListener {
+                openNoteActivity(null, Constants.FLAG_ADD_NOTE)
+            }
 
             // On first activity creation load mainFragment
             if (savedInstanceState == null) {
-                val mainFragment = MainFragment(drawer)
+                val mainFragment = MainFragment()
                 mainFragment.setMainListener(this)
                 fragmentManager.beginTransaction()
                     .add(fragmentContainer.id, mainFragment, Constants.MAIN_FRAGMENT_KEY)
@@ -72,49 +88,28 @@ class MainActivity : AppCompatActivity(),
                     (fragment as MainFragment).setMainListener(this)
                 } else {
                     // Checking addNoteFragment
-                    fragment = fragmentManager.findFragmentByTag(Constants.ADD_NOTE_FRAGMENT_KEY)
-                    if (fragment != null) {
-                        (fragment as AddNoteFragment).setAddNoteListener(this)
-                    }
+                    // TODO: check for remaining fragments
                 }
             }
         }
     }
 
-    private fun loadMainFragment() {
-        var mainFragment = fragmentManager.findFragmentByTag(Constants.MAIN_FRAGMENT_KEY)
+    // TODO: It will be useful later when there will be more fragments
+//    private fun loadMainFragment() {
+//        var mainFragment = fragmentManager.findFragmentByTag(Constants.MAIN_FRAGMENT_KEY)
+//
+//        if (mainFragment == null) {
+//            mainFragment = MainFragment(drawer)
+//            mainFragment.setMainListener(this)
+//            fragmentManager.beginTransaction()
+//                .replace(fragmentContainer.id, mainFragment, Constants.MAIN_FRAGMENT_KEY)
+//                .commit()
+//        } else {
+//            (mainFragment as MainFragment).setMainListener(this)
+//        }
+//    }
 
-        if (mainFragment == null) {
-            mainFragment = MainFragment(drawer)
-            mainFragment.setMainListener(this)
-            fragmentManager.beginTransaction()
-                .replace(fragmentContainer.id, mainFragment, Constants.MAIN_FRAGMENT_KEY)
-                .commit()
-        } else {
-            fragmentManager.popBackStack(
-                Constants.ADD_NOTE_FRAGMENT_KEY,
-                FragmentManager.POP_BACK_STACK_INCLUSIVE
-            )
-            (mainFragment as MainFragment).setMainListener(this)
-        }
-    }
-
-    private fun loadAddNoteFragment() {
-        var addNoteFragment = fragmentManager.findFragmentByTag(Constants.ADD_NOTE_FRAGMENT_KEY)
-
-        if (addNoteFragment == null) {
-            addNoteFragment = AddNoteFragment(drawer.drawerLayout)
-            addNoteFragment.setAddNoteListener(this)
-            fragmentManager.beginTransaction()
-                .replace(fragmentContainer.id, addNoteFragment, Constants.ADD_NOTE_FRAGMENT_KEY)
-                .addToBackStack(Constants.ADD_NOTE_FRAGMENT_KEY)
-                .commit()
-        } else {
-            (addNoteFragment as AddNoteFragment).setAddNoteListener(this)
-        }
-    }
-
-    private fun createDriver(user: FirebaseUser) {
+    private fun createDrawer(user: FirebaseUser) {
         val notesItem =
             PrimaryDrawerItem().withIdentifier(Constants.DRAWER_NOTES_ITEM).withName("Notes")
 
@@ -128,33 +123,38 @@ class MainActivity : AppCompatActivity(),
 
         drawer = DrawerBuilder()
             .withActivity(this)
+            .withToolbar(toolbar)
             .withAccountHeader(header)
             .addDrawerItems(notesItem, DividerDrawerItem())
             .build()
     }
 
-    override fun fabClicked() {
-        loadAddNoteFragment()
-    }
+    private fun openNoteActivity(note: Note?, flag: Int) {
+        val intent = Intent(this, NoteActivity::class.java)
+        val bundle = Bundle()
 
-    override fun noteAdded() {
-        loadMainFragment()
-    }
+        bundle.putInt(Constants.NOTE_KEY, flag)
 
-    override fun backClicked() {
-        loadMainFragment()
+        if (note != null) {
+            bundle.putString(Constants.NOTE_ID_KEY, note.id)
+            bundle.putString(Constants.NOTE_TITLE_KEY, note.title)
+            bundle.putString(Constants.NOTE_BODY_KEY, note.body)
+            note.color?.let { bundle.putInt(Constants.NOTE_COLOR_KEY, it) }
+            note.lastChanged?.let { bundle.putLong(Constants.NOTE_LAST_CHANGED_KEY, it) }
+        }
+
+        startActivity(intent, bundle)
     }
 
     override fun onBackPressed() {
         if (drawer.isDrawerOpen) {
             drawer.closeDrawer()
-        } else if (fragmentManager.backStackEntryCount > 0) {
-            val addNoteFragment = fragmentManager.findFragmentByTag(Constants.ADD_NOTE_FRAGMENT_KEY)
-            if (addNoteFragment != null) {
-                (addNoteFragment as AddNoteFragment).back()
-            }
         } else {
             super.onBackPressed()
         }
+    }
+
+    override fun onItemClicked(note: Note) {
+        // TODO: start noteActivity to preview/edit note
     }
 }

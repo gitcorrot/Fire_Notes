@@ -44,14 +44,16 @@ class MainViewModel : ViewModel() {
 
     private fun loadNotes() {
         setLoading(true)
-        viewModelScope.launch {
+
             Log.d(TAG, "Loading Notes...")
             // Coroutine that will be canceled when the ViewModel is cleared.
             firebaseRepository.addNotesListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     setLoading(false)
-                    Log.d(TAG, "Detected notes data change")
-                    Log.d(TAG, "Notes number: ${snapshot.childrenCount}")
+                    Log.d(
+                        TAG, "Detected notes data change." +
+                                "\nNotes number: ${snapshot.childrenCount}"
+                    )
                     val notes: List<Note> = snapshot.children.mapNotNull {
                         it.getValue(Note::class.java)
                     }
@@ -65,5 +67,4 @@ class MainViewModel : ViewModel() {
                 }
             })
         }
-    }
 }

@@ -10,33 +10,25 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager.VERTICAL
-import com.corrot.firenotes.MainActivity
 import com.corrot.firenotes.R
 import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.viewmodel.MainViewModel
-import com.google.android.material.bottomappbar.BottomAppBar
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.mikepenz.materialdrawer.Drawer
 import kotlinx.android.synthetic.main.fragment_main.view.*
 
-class MainFragment(drawer: Drawer) : Fragment() {
+class MainFragment : Fragment() {
     companion object {
         @JvmField
         val TAG: String = MainFragment::class.java.simpleName
     }
 
     interface MainListener {
-        fun fabClicked()
+        fun onItemClicked(note: Note)
     }
 
-    private val mDrawer = drawer // to attach toolbar to it
-
     private lateinit var callback: MainListener
-    private lateinit var toolbar: BottomAppBar
     private lateinit var recyclerView: RecyclerView
     private lateinit var layoutManager: StaggeredGridLayoutManager
     private lateinit var notesAdapter: NotesAdapter
-    private lateinit var fab: FloatingActionButton
     private lateinit var shadow: View
     private lateinit var progressBar: ProgressBar
 
@@ -45,14 +37,6 @@ class MainFragment(drawer: Drawer) : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_main, container, false)
-
-        // Setting Toolbar
-        toolbar = view.toolbar_main as BottomAppBar
-        toolbar.setNavigationIcon(R.drawable.ic_menu_white_24dp)
-        toolbar.title = "Fire notes"
-        (activity as MainActivity).setSupportActionBar(toolbar)
-        setHasOptionsMenu(true)
-        activity?.let { mDrawer.setToolbar(it, toolbar) }
 
         // RecyclerView displaying notes
         recyclerView = view.rv_main
@@ -66,7 +50,9 @@ class MainFragment(drawer: Drawer) : Fragment() {
         // Passing Fragment's view as LifecycleOwner to avoid memory leaks
         mainViewModel.getAllNotes().observe(viewLifecycleOwner, Observer<List<Note>> {
             Log.d(TAG, "Updating notes adapter")
-            notesAdapter.setNotes(it)
+
+                notesAdapter.setNotes(it)
+
         })
 
         // Show / Hide loading bar
@@ -85,12 +71,6 @@ class MainFragment(drawer: Drawer) : Fragment() {
                 }
             }
         })
-
-        // Floating Action Button
-        fab = view.fab_main
-        fab.setOnClickListener {
-            callback.fabClicked()
-        }
 
         return view
     }

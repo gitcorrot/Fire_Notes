@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:animateLayoutChanges="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
     <com.google.android.material.bottomappbar.BottomAppBar
-        android:id="@+id/toolbar_add_note"
+        android:id="@+id/toolbar_note"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
@@ -15,12 +16,12 @@
         app:fabAlignmentMode="end" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_add_note"
+        android:id="@+id/fab_note"
         style="@style/Widget.MaterialComponents.FloatingActionButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_done_24dp"
-        app:layout_anchor="@id/toolbar_add_note" />
+        app:layout_anchor="@id/toolbar_note" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -35,25 +36,13 @@
             android:layout_marginTop="4dp"
             android:layout_marginEnd="8dp"
             android:background="@drawable/shape_color"
-            app:layout_constraintBottom_toTopOf="@+id/til_add_note_body"
+            app:layout_constraintBottom_toTopOf="@+id/til_note_body"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/til_add_note_title"
-            app:layout_constraintTop_toTopOf="@+id/til_add_note_title" />
-
-<!--        <com.mikhaellopez.circleview.CircleView-->
-<!--            android:id="@+id/v_add_note_color"-->
-<!--            android:layout_width="30dp"-->
-<!--            android:layout_height="30dp"-->
-<!--            android:layout_marginEnd="8dp"-->
-<!--            app:cv_border="true"-->
-<!--            app:cv_border_color="?attr/colorOnSurface"-->
-<!--            app:cv_border_width="2dp"-->
-<!--            app:layout_constraintBottom_toTopOf="@+id/til_add_note_body"-->
-<!--            app:layout_constraintEnd_toEndOf="parent"-->
-<!--            app:layout_constraintTop_toTopOf="@+id/til_add_note_title" />-->
+            app:layout_constraintStart_toEndOf="@id/til_note_title"
+            app:layout_constraintTop_toTopOf="@+id/til_note_title" />
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/til_add_note_title"
+            android:id="@+id/til_note_title"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -74,7 +63,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/til_add_note_body"
+            android:id="@+id/til_note_body"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -84,7 +73,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/til_add_note_title">
+            app:layout_constraintTop_toBottomOf="@id/til_note_title">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:layout_width="match_parent"

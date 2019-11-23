@@ -2,6 +2,7 @@
     <string name="app_name">Fire Notes</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_auth">AuthActivity</string>
+    <string name="title_activity_note">NoteActivity</string>
 
     <string name="password">Password</string>
     <string name="sign_in">Sign in</string>

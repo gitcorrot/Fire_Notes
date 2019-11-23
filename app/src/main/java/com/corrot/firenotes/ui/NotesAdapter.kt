@@ -2,7 +2,6 @@ package com.corrot.firenotes.ui
 
 import android.view.View
 import android.view.ViewGroup
-import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.corrot.firenotes.R
@@ -29,8 +28,8 @@ class NotesAdapter(private var notes: List<Note>) :
                 view.tv_item_note_body.visibility = View.GONE
             }
 
-            n.color?.let {
-                (view as CardView).setCardBackgroundColor(it)
+            if (n.color != null) {
+                view.v_item_note_color.background.setTint(n.color!!)
             }
         }
     }
@@ -50,6 +49,10 @@ class NotesAdapter(private var notes: List<Note>) :
         val diff = notifyNotesChanged(notes, this.notes)
         this.notes = notes
         diff.dispatchUpdatesTo(this)
+    }
+
+    fun getNotes(): List<Note> {
+        return this.notes
     }
 
     private fun notifyNotesChanged(
