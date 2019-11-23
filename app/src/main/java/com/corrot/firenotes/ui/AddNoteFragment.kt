@@ -1,11 +1,13 @@
 package com.corrot.firenotes.ui
 
+import android.content.Context
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.*
 import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
 import androidx.core.widget.addTextChangedListener
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import com.corrot.firenotes.MainActivity
@@ -20,7 +22,7 @@ import com.google.android.material.textfield.TextInputLayout
 import kotlinx.android.synthetic.main.fragment_add_note.view.*
 
 
-class AddNoteFragment : Fragment() {
+class AddNoteFragment(drawerLayout: DrawerLayout) : Fragment() {
     companion object {
         @JvmField
         val TAG: String = AddNoteFragment::class.java.simpleName
@@ -31,6 +33,8 @@ class AddNoteFragment : Fragment() {
         fun backClicked()
     }
 
+    private val mDrawerLayout = drawerLayout // to lock drawer in this fragment
+
     private lateinit var callback: AddNoteListener
     private lateinit var addNoteViewModel: AddNoteViewModel
 
@@ -39,6 +43,11 @@ class AddNoteFragment : Fragment() {
     private lateinit var titleInputLayout: TextInputLayout
     private lateinit var bodyInputLayout: TextInputLayout
     private lateinit var fab: FloatingActionButton
+
+    override fun onAttach(context: Context) {
+        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+        super.onAttach(context)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -189,5 +198,10 @@ class AddNoteFragment : Fragment() {
             outState.putInt(Constants.SAVE_STATE_COLOR, color)
 
         super.onSaveInstanceState(outState)
+    }
+
+    override fun onDetach() {
+        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+        super.onDetach()
     }
 }
