@@ -15,7 +15,7 @@ import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.viewmodel.MainViewModel
 import kotlinx.android.synthetic.main.fragment_main.view.*
 
-class MainFragment : Fragment() {
+class MainFragment : Fragment(), NotesAdapter.OnItemClickListener {
     companion object {
         @JvmField
         val TAG: String = MainFragment::class.java.simpleName
@@ -42,7 +42,7 @@ class MainFragment : Fragment() {
         recyclerView = view.rv_main
         layoutManager = StaggeredGridLayoutManager(2, VERTICAL)
         recyclerView.layoutManager = layoutManager
-        notesAdapter = NotesAdapter(emptyList())
+        notesAdapter = NotesAdapter(emptyList(), this)
         recyclerView.adapter = notesAdapter
 
         // Creating MainViewModel
@@ -50,9 +50,7 @@ class MainFragment : Fragment() {
         // Passing Fragment's view as LifecycleOwner to avoid memory leaks
         mainViewModel.getAllNotes().observe(viewLifecycleOwner, Observer<List<Note>> {
             Log.d(TAG, "Updating notes adapter")
-
-                notesAdapter.setNotes(it)
-
+            notesAdapter.setNotes(it)
         })
 
         // Show / Hide loading bar
@@ -77,6 +75,12 @@ class MainFragment : Fragment() {
 
     fun setMainListener(callback: MainListener) {
         this.callback = callback
+    }
+
+    // Callback from NoteAdapter
+    override fun onItemClicked(note: Note) {
+        // Call MainActivity back with note
+        this.callback.onItemClicked(note)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

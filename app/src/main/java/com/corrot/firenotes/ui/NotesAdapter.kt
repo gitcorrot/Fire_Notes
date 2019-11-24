@@ -9,15 +9,28 @@ import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.utils.inflate
 import kotlinx.android.synthetic.main.item_note.view.*
 
-class NotesAdapter(private var notes: List<Note>) :
+class NotesAdapter(
+    private var notes: List<Note>,
+    private val itemClickListener: OnItemClickListener
+) :
     RecyclerView.Adapter<NotesAdapter.NoteHolder>() {
 
+    interface OnItemClickListener {
+        fun onItemClicked(note: Note)
+    }
+
     class NoteHolder(v: View) : RecyclerView.ViewHolder(v) {
+        private val view = v
         private val titleView = v.tv_item_note_title
         private val bodyView = v.tv_item_note_body
         private val colorView = v.v_item_note_color
 
-        fun bind(n: Note) {
+        fun bind(n: Note, clickListener: OnItemClickListener) {
+
+            view.setOnClickListener {
+                clickListener.onItemClicked(n)
+            }
+
             if (!n.title.isNullOrEmpty()) {
                 titleView.text = n.title
                 titleView.visibility = View.VISIBLE
@@ -44,7 +57,7 @@ class NotesAdapter(private var notes: List<Note>) :
     }
 
     override fun onBindViewHolder(holder: NoteHolder, position: Int) {
-        holder.bind(notes[position])
+        holder.bind(notes[position], itemClickListener)
     }
 
     override fun getItemCount(): Int = notes.size

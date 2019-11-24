@@ -4,14 +4,12 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.corrot.firenotes.FirebaseRepository
 import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.utils.notifyObserver
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
-import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
     companion object {
@@ -44,27 +42,25 @@ class MainViewModel : ViewModel() {
 
     private fun loadNotes() {
         setLoading(true)
+        Log.d(TAG, "Loading Notes...")
 
-            Log.d(TAG, "Loading Notes...")
-            // Coroutine that will be canceled when the ViewModel is cleared.
-            firebaseRepository.addNotesListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    setLoading(false)
-                    Log.d(
-                        TAG, "Detected notes data change." +
-                                "\nNotes number: ${snapshot.childrenCount}"
-                    )
-                    val notes: List<Note> = snapshot.children.mapNotNull {
-                        it.getValue(Note::class.java)
-                    }
-                    allNotes.value = notes
-                    allNotes.notifyObserver()
+        firebaseRepository.addNotesListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                setLoading(false)
+                Log.d(
+                    TAG, "Detected notes data change. Notes number: ${snapshot.childrenCount}"
+                )
+                val notes: List<Note> = snapshot.children.mapNotNull {
+                    it.getValue(Note::class.java)
                 }
+                allNotes.value = notes
+                allNotes.notifyObserver()
+            }
 
-                override fun onCancelled(e: DatabaseError) {
-                    setLoading(false)
-                    Log.d(TAG, "Error during loading notes: ${e.message}")
-                }
-            })
-        }
+            override fun onCancelled(e: DatabaseError) {
+                setLoading(false)
+                Log.d(TAG, "Error during loading notes: ${e.message}")
+            }
+        })
+    }
 }

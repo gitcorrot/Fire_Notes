@@ -7,11 +7,14 @@ class Constants {
 
         const val MAIN_FRAGMENT_KEY = "mainFragment"
 
+        const val SAVE_STATE_ID = "saveStateId"
         const val SAVE_STATE_TITLE = "saveStateTitle"
         const val SAVE_STATE_BODY = "saveStateBody"
         const val SAVE_STATE_COLOR = "saveStateColor"
 
         const val FLAG_ADD_NOTE = 1
+        const val FLAG_EDIT_NOTE = 2
+
         const val FLAG_NOTE_KEY = "noteFlag"
 
         const val NOTE_ID_KEY = "noteId"

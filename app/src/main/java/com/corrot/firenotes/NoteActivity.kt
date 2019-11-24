@@ -2,6 +2,7 @@ package com.corrot.firenotes
 
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -10,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.Observer
+import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.utils.Constants
 import com.corrot.firenotes.viewmodel.NoteViewModel
 import com.flask.colorpicker.ColorPickerView
@@ -27,6 +29,9 @@ class NoteActivity : AppCompatActivity() {
 
     private lateinit var noteViewModel: NoteViewModel
 
+    private var flag: Int = 0
+    private var note: Note? = null
+
     private lateinit var toolbar: Toolbar
     private lateinit var colorView: View
     private lateinit var titleInputLayout: TextInputLayout
@@ -36,6 +41,9 @@ class NoteActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_note)
+
+        // Always read flag
+        flag = intent.getIntExtra(Constants.FLAG_NOTE_KEY, 0)
 
         toolbar = toolbar_note as Toolbar
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp)
@@ -51,7 +59,7 @@ class NoteActivity : AppCompatActivity() {
         // Set color on change
         colorView = v_note_color
 
-        // Passing Fragment's view as LifecycleOwner to avoid memory leaks
+        // Set up observers
         noteViewModel.getColor().observe(this, Observer {
             val shape = colorView.background as GradientDrawable
             shape.setColor(it)
@@ -59,23 +67,53 @@ class NoteActivity : AppCompatActivity() {
 
         // Restore state
         if (savedInstanceState != null) {
+            val id = savedInstanceState.getCharSequence(Constants.SAVE_STATE_ID)
             val title = savedInstanceState.getCharSequence(Constants.SAVE_STATE_TITLE)
             val body = savedInstanceState.getCharSequence(Constants.SAVE_STATE_BODY)
-            val color = savedInstanceState.getInt(Constants.SAVE_STATE_COLOR)
+            val color = savedInstanceState.getInt(Constants.SAVE_STATE_COLOR, 0)
+
+            if (!id.isNullOrEmpty())
+                noteViewModel.setId(id.toString())
 
             if (!title.isNullOrEmpty()) {
                 noteViewModel.setTitle(title.toString())
                 titleInputLayout.editText?.setText(title)
             }
+
             if (!body.isNullOrEmpty()) {
                 noteViewModel.setBody(body.toString())
                 bodyInputLayout.editText?.setText(body)
             }
-            noteViewModel.setColor(color)
+
+            if (color != 0)
+                noteViewModel.setColor(color)
         } else {
             // Set default color
             val color = colorView.context.getColor(R.color.colorSecondary)
             noteViewModel.setColor(color)
+
+            // If there is no savedInstanceState -> retrieve intent data (flag and note)
+            val bundle = intent.extras
+
+            bundle?.let { data ->
+                when (data.getInt(Constants.FLAG_NOTE_KEY)) {
+                    Constants.FLAG_ADD_NOTE -> {
+                        Log.d(TAG, "Opened NoteActivity with 'add note' flag")
+                    }
+                    Constants.FLAG_EDIT_NOTE -> {
+                        Log.d(TAG, "Opened NoteActivity with 'edit note' flag")
+                        note = getNoteFromBundle(data)
+                        note?.let {
+                            noteViewModel.setNote(it)
+                            titleInputLayout.editText?.setText(it.title)
+                            bodyInputLayout.editText?.setText(it.body)
+                        }
+                    }
+                    else -> {
+                        Log.e(TAG, "Opened NoteActivity with no flag")
+                    }
+                }
+            }
         }
 
         // Update user input
@@ -99,6 +137,24 @@ class NoteActivity : AppCompatActivity() {
 //                Snackbar.make(toolbar, "Empty note", Snackbar.LENGTH_SHORT).show()
                 Toast.makeText(this, "Can't add empty note", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    private fun getNoteFromBundle(b: Bundle): Note? {
+        val id = b.getString(Constants.NOTE_ID_KEY)
+
+        return if (!id.isNullOrEmpty()) {
+            val note = Note(id)
+            note.title = b.getString(Constants.NOTE_TITLE_KEY)
+            note.body = b.getString(Constants.NOTE_BODY_KEY)
+            note.color = b.getInt(Constants.NOTE_COLOR_KEY)
+            note.lastChanged = b.getLong(Constants.NOTE_LAST_CHANGED_KEY)
+
+            note
+        } else {
+            // Should never get there
+            Log.e(TAG, "Note id must not be null")
+            null
         }
     }
 
@@ -167,10 +223,13 @@ class NoteActivity : AppCompatActivity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
+        val id = noteViewModel.getId().value
         val title = noteViewModel.getTitle().value
         val body = noteViewModel.getBody().value
         val color = noteViewModel.getColor().value
 
+        if (id != null)
+            outState.putCharSequence(Constants.SAVE_STATE_ID, id)
         if (title != null)
             outState.putCharSequence(Constants.SAVE_STATE_TITLE, title)
         if (body != null)

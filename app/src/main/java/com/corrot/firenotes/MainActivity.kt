@@ -133,7 +133,7 @@ class MainActivity : AppCompatActivity(),
         val intent = Intent(this, NoteActivity::class.java)
         val bundle = Bundle()
 
-        bundle.putInt(Constants.NOTE_KEY, flag)
+        bundle.putInt(Constants.FLAG_NOTE_KEY, flag)
 
         if (note != null) {
             bundle.putString(Constants.NOTE_ID_KEY, note.id)
@@ -143,7 +143,8 @@ class MainActivity : AppCompatActivity(),
             note.lastChanged?.let { bundle.putLong(Constants.NOTE_LAST_CHANGED_KEY, it) }
         }
 
-        startActivity(intent, bundle)
+        intent.putExtras(bundle)
+        startActivity(intent)
     }
 
     override fun onBackPressed() {
@@ -155,6 +156,6 @@ class MainActivity : AppCompatActivity(),
     }
 
     override fun onItemClicked(note: Note) {
-        // TODO: start noteActivity to preview/edit note
+        openNoteActivity(note, Constants.FLAG_EDIT_NOTE)
     }
 }
