@@ -13,23 +13,27 @@ class NotesAdapter(private var notes: List<Note>) :
     RecyclerView.Adapter<NotesAdapter.NoteHolder>() {
 
     class NoteHolder(v: View) : RecyclerView.ViewHolder(v) {
-        private val view = v
+        private val titleView = v.tv_item_note_title
+        private val bodyView = v.tv_item_note_body
+        private val colorView = v.v_item_note_color
 
         fun bind(n: Note) {
             if (!n.title.isNullOrEmpty()) {
-                view.tv_item_note_title.text = n.title
+                titleView.text = n.title
+                titleView.visibility = View.VISIBLE
             } else {
-                view.tv_item_note_title.visibility = View.GONE
+                titleView.visibility = View.GONE
             }
 
             if (!n.body.isNullOrEmpty()) {
-                view.tv_item_note_body.text = n.body
+                bodyView.text = n.body
+                bodyView.visibility = View.VISIBLE
             } else {
-                view.tv_item_note_body.visibility = View.GONE
+                bodyView.visibility = View.GONE
             }
 
             if (n.color != null) {
-                view.v_item_note_color.background.setTint(n.color!!)
+                colorView.background.setTint(n.color!!)
             }
         }
     }
@@ -64,10 +68,11 @@ class NotesAdapter(private var notes: List<Note>) :
             override fun getNewListSize(): Int = newNotes.size
 
             override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-                oldNotes[oldItemPosition].title == newNotes[newItemPosition].title
+                oldNotes[oldItemPosition].id == newNotes[newItemPosition].id
 
             override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-                oldNotes[oldItemPosition].body == newNotes[newItemPosition].body
+                oldNotes[oldItemPosition].title == newNotes[newItemPosition].title &&
+                        oldNotes[oldItemPosition].body == newNotes[newItemPosition].body
         })
     }
 }
