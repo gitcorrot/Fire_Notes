@@ -24,5 +24,6 @@ class Constants {
         const val NOTE_LAST_CHANGED_KEY = "noteLastChanged"
 
         const val DRAWER_NOTES_ITEM = 1L
+        const val DRAWER_LOG_OUT_ITEM = 2L
     }
 }

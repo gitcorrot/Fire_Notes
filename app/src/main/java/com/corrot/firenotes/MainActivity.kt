@@ -3,6 +3,7 @@ package com.corrot.firenotes
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
@@ -19,6 +20,8 @@ import com.mikepenz.materialdrawer.DrawerBuilder
 import com.mikepenz.materialdrawer.model.DividerDrawerItem
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem
+import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity(),
@@ -49,11 +52,7 @@ class MainActivity : AppCompatActivity(),
 
         // If user is null (is not logged in) open signUpActivity
         if (mAuth.currentUser == null) {
-            val intent = Intent(this, AuthActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-            startActivity(intent)
-            this.overridePendingTransition(0, 0)
-            finish()
+            startAuthActivity()
         } else {
             val user: FirebaseUser = mAuth.currentUser!!
             Log.d(TAG, "LOGGED AS: ${user.email.toString()}")
@@ -110,8 +109,24 @@ class MainActivity : AppCompatActivity(),
 //    }
 
     private fun createDrawer(user: FirebaseUser) {
-        val notesItem =
-            PrimaryDrawerItem().withIdentifier(Constants.DRAWER_NOTES_ITEM).withName("Notes")
+        val notesItem = PrimaryDrawerItem()
+            .withIdentifier(Constants.DRAWER_NOTES_ITEM)
+            .withName("Notes")
+
+        val logOutItem = SecondaryDrawerItem()
+            .withIdentifier(Constants.DRAWER_LOG_OUT_ITEM)
+            .withOnDrawerItemClickListener(object : Drawer.OnDrawerItemClickListener {
+                override fun onItemClick(
+                    view: View?,
+                    position: Int,
+                    drawerItem: IDrawerItem<*>
+                ): Boolean {
+                    Log.d(TAG, "Logging out")
+                    logOut()
+                    return true
+                }
+            })
+            .withName("Log out")
 
         val header = AccountHeaderBuilder()
             .withActivity(this)
@@ -125,8 +140,20 @@ class MainActivity : AppCompatActivity(),
             .withActivity(this)
             .withToolbar(toolbar)
             .withAccountHeader(header)
-            .addDrawerItems(notesItem, DividerDrawerItem())
+            .addDrawerItems(notesItem, DividerDrawerItem(), logOutItem)
             .build()
+    }
+
+    private fun startAuthActivity() {
+        val intent = Intent(this, AuthActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        startActivity(intent)
+        finish()
+    }
+
+    private fun logOut() {
+        mAuth.signOut()
+        startAuthActivity()
     }
 
     private fun openNoteActivity(note: Note?, flag: Int) {
@@ -158,4 +185,5 @@ class MainActivity : AppCompatActivity(),
     override fun onItemClicked(note: Note) {
         openNoteActivity(note, Constants.FLAG_EDIT_NOTE)
     }
+
 }
