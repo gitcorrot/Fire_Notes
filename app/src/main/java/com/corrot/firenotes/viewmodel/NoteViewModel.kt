@@ -16,36 +16,36 @@ class NoteViewModel : ViewModel() {
 
     private val firebaseRepository = FirebaseRepository()
 
-    private var idLiveData = MutableLiveData<String>()
-    private var titleLiveData = MutableLiveData<String>()
-    private var bodyLiveData = MutableLiveData<String>()
+    private var id: String? = null
+    private var title: String? = null
+    private var body:String? = null
     private var colorLiveData = MutableLiveData<Int>()
 
+    var originalNote: Note? = null
+
+
     fun setId(id: String) {
-        idLiveData.value = id
-        idLiveData.notifyObserver()
+        this.id = id
     }
 
-    fun getId(): LiveData<String> {
-        return this.idLiveData
+    fun getId(): String? {
+        return this.id
     }
 
     fun setTitle(title: String) {
-        titleLiveData.value = title
-        titleLiveData.notifyObserver()
+        this.title = title
     }
 
-    fun getTitle(): LiveData<String> {
-        return this.titleLiveData
+    fun getTitle(): String? {
+        return this.title
     }
 
     fun setBody(body: String) {
-        bodyLiveData.value = body
-        bodyLiveData.notifyObserver()
+        this.body = body
     }
 
-    fun getBody(): LiveData<String> {
-        return this.bodyLiveData
+    fun getBody(): String? {
+        return this.body
     }
 
     fun setColor(color: Int) {
@@ -64,10 +64,22 @@ class NoteViewModel : ViewModel() {
         n.color?.let { setColor(it) }
     }
 
+    fun getNote(): Note? {
+        return if (!id.isNullOrEmpty()) {
+            val n = Note(id!!)
+            n.title = getTitle()
+            n.body = getBody()
+            n.color = getColor().value
+            n
+        } else {
+            null
+        }
+    }
+
     fun addNoteToDatabase() {
-        val id = getId().value
-        val title = getTitle().value
-        val body = getBody().value
+        val id = getId()
+        val title = getTitle()
+        val body = getBody()
         val color = getColor().value
         val date = Calendar.getInstance().timeInMillis
 

@@ -16,6 +16,7 @@ import com.corrot.firenotes.utils.Constants
 import com.corrot.firenotes.viewmodel.NoteViewModel
 import com.flask.colorpicker.ColorPickerView
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder
+import com.google.android.material.bottomappbar.BottomAppBar
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.textfield.TextInputLayout
@@ -31,7 +32,6 @@ class NoteActivity : AppCompatActivity() {
 
     private var flag: Int = 0
     private var color: Int = 0
-    private var note: Note? = null
 
     private lateinit var toolbar: Toolbar
     private lateinit var colorView: View
@@ -47,7 +47,7 @@ class NoteActivity : AppCompatActivity() {
         flag = intent.getIntExtra(Constants.FLAG_NOTE_KEY, 0)
 
         // Initialize views
-        toolbar = toolbar_note as Toolbar
+        toolbar = toolbar_note as BottomAppBar
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp)
         toolbar.title = "Add note"
         setSupportActionBar(toolbar)
@@ -92,31 +92,9 @@ class NoteActivity : AppCompatActivity() {
                 setDefaultColor()
             }
         } else {
-            // Try to retrieve intent bundle (if there is 'edit' flag
+            // If there is no savedInstanceState -> try to retrieve intent bundle
             val bundle = intent.extras
-
-            bundle?.let { data ->
-                when (data.getInt(Constants.FLAG_NOTE_KEY)) {
-                    Constants.FLAG_ADD_NOTE -> {
-                        Log.d(TAG, "Opened NoteActivity with 'add note' flag")
-                        setDefaultColor()
-                    }
-                    Constants.FLAG_EDIT_NOTE -> {
-                        Log.d(TAG, "Opened NoteActivity with 'edit note' flag")
-                        note = getNoteFromBundle(data)
-                        note?.let {
-                            noteViewModel.setNote(it)
-                            // Update edit texts manually (can't be updated via observers, because
-                            // there are text watchers set
-                            titleInputLayout.editText?.setText(it.title)
-                            bodyInputLayout.editText?.setText(it.body)
-                        }
-                    }
-                    else -> {
-                        Log.e(TAG, "Opened NoteActivity with no flag")
-                    }
-                }
-            }
+            retrieveDataFromBundle(bundle)
         }
 
         // Update user input in viewModel
@@ -130,12 +108,81 @@ class NoteActivity : AppCompatActivity() {
 
         // Save on FAB clicked
         fab.setOnClickListener {
-            // If title or body is not empty - add note to db
-            if (validateInput()) {
-                noteViewModel.addNoteToDatabase()
-                finish()
-            } else {
-                Toast.makeText(this, "Can't add empty note", Toast.LENGTH_SHORT).show()
+            onFabClicked()
+        }
+    }
+
+    //--------------------------------------------------------------------------------------------//
+
+    /**
+     * Function that retrieves Note from Bundle and update ViewModel
+     * @param b Bundle?
+     */
+    private fun retrieveDataFromBundle(b: Bundle?) {
+        b?.let { data ->
+            when (data.getInt(Constants.FLAG_NOTE_KEY)) {
+                Constants.FLAG_ADD_NOTE -> {
+                    Log.d(TAG, "Opened NoteActivity with 'add note' flag")
+                    setDefaultColor()
+                }
+                Constants.FLAG_EDIT_NOTE -> {
+                    Log.d(TAG, "Opened NoteActivity with 'edit note' flag")
+                    val note = getNoteFromBundle(data)
+                    note?.let { n ->
+                        noteViewModel.setNote(n)
+                        // Set originalNote as n to check for changes later
+                        noteViewModel.originalNote = n
+                        // Update edit texts manually (can't be updated via observers, because
+                        // there are text watchers set
+                        titleInputLayout.editText?.setText(n.title)
+                        bodyInputLayout.editText?.setText(n.body)
+                    }
+                }
+                else -> {
+                    Log.e(TAG, "Opened NoteActivity with no flag")
+                }
+            }
+        }
+    }
+
+    /**
+     * Function that is called when user clicks floating action button.
+     */
+    private fun onFabClicked() {
+        when (flag) {
+            // add note -> only validate
+            Constants.FLAG_ADD_NOTE -> {
+                if (validateInput()) {
+                    // If title or body is not empty -> add note to db
+                    noteViewModel.addNoteToDatabase()
+                    finish()
+                } else {
+                    Toast.makeText(
+                        this,
+                        "Can't add empty note", Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+            // edit note -> check for changes
+            Constants.FLAG_EDIT_NOTE -> {
+                if (checkForChanges()) {
+                    // If changes were made -> validate input
+                    if (validateInput()) {
+                        noteViewModel.addNoteToDatabase()
+                        finish()
+                    } else {
+                        Toast.makeText(
+                            this,
+                            "Can't add empty note", Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } else {
+                    // No changes were made, finish without saving
+                    finish()
+                }
+            }
+            else -> {
+                Log.e(TAG, "Wrong flag!")
             }
         }
     }
@@ -150,17 +197,43 @@ class NoteActivity : AppCompatActivity() {
 
     /**
      * Function that validates user input. Checks if note's title or body is not null.
-     * Returns true if conditions are meet, else returns false.
-     * @return Boolean
+     * @return Returns true if title or body is not null, else returns false.
      */
     private fun validateInput(): Boolean {
-        return (!noteViewModel.getTitle().value.isNullOrEmpty()
-                || !noteViewModel.getBody().value.isNullOrEmpty())
+        /*  OR
+        1 | 1 = 1
+        1 | 0 = 1
+        0 | 1 = 1
+        0 | 0 = 0
+        */
+        return (!noteViewModel.getTitle().isNullOrEmpty() ||
+                !noteViewModel.getBody().isNullOrEmpty())
+    }
+
+    /**
+     * Function that checks for changes
+     * @return If changes were made returns true, else returns false
+     */
+    private fun checkForChanges(): Boolean {
+        val originalNote = noteViewModel.originalNote
+        val note = noteViewModel.getNote()
+
+        Log.d(TAG, "original: ${originalNote?.title}, note: ${note?.title}")
+        Log.d(TAG, "original: ${originalNote?.body}, note: ${note?.body}")
+        Log.d(TAG, "original: ${originalNote?.color}, note: ${note?.color}")
+
+        return if (originalNote != null && note != null) {
+            originalNote.title != note.title
+                    || originalNote.body != note.body
+                    || originalNote.color != note.color
+        } else {
+            false
+        }
     }
 
     /**
      * Function that retrieves Note from bundle
-     * @return Note?
+     * @return If Note is not null returns Note, else null
      */
     private fun getNoteFromBundle(b: Bundle): Note? {
         val id = b.getString(Constants.NOTE_ID_KEY)
@@ -198,10 +271,10 @@ class NoteActivity : AppCompatActivity() {
                 ColorPickerDialogBuilder
                     .with(colorView.context)
                     .setTitle("Choose color")
-                    .wheelType(ColorPickerView.WHEEL_TYPE.FLOWER)
+                    .wheelType(ColorPickerView.WHEEL_TYPE.CIRCLE)
                     .showBorder(true)
                     .showColorPreview(false)
-                    .density(6)
+                    .density(8)
                     .noSliders()
                     .initialColor(color)
                     .setOnColorChangedListener {
@@ -229,20 +302,46 @@ class NoteActivity : AppCompatActivity() {
     private fun back() {
         currentFocus?.clearFocus()
 
-        if (!noteViewModel.getTitle().value.isNullOrEmpty()
-            || !noteViewModel.getBody().value.isNullOrEmpty()
-        ) {
-            val dialogBuilder = MaterialAlertDialogBuilder(this)
-            with(dialogBuilder) {
-                setTitle("Discard note?")
-                setPositiveButton("Discard") { _, _ ->
+        when (flag) {
+            // add note -> only validate
+            Constants.FLAG_ADD_NOTE -> {
+                if (validateInput()) {
+                    // If title or body is not empty -> show alert dialog
+                    val dialogBuilder = MaterialAlertDialogBuilder(this)
+                    with(dialogBuilder) {
+                        setTitle("Discard note?")
+                        setPositiveButton("Discard") { _, _ ->
+                            finish()
+                        }
+                        setNegativeButton("Cancel", null)
+                        show()
+                    }
+                } else {
+                    // If title and body is empty
                     finish()
                 }
-                setNegativeButton("Cancel", null)
-                show()
             }
-        } else {
-            finish()
+            // edit note -> check for changes
+            Constants.FLAG_EDIT_NOTE -> {
+                if (checkForChanges()) {
+                    // If changes were made -> show alert dialog
+                    val dialogBuilder = MaterialAlertDialogBuilder(this)
+                    with(dialogBuilder) {
+                        setTitle("Discard note?")
+                        setPositiveButton("Discard") { _, _ ->
+                            finish()
+                        }
+                        setNegativeButton("Cancel", null)
+                        show()
+                    }
+                } else {
+                    // No changes were made, finish
+                    finish()
+                }
+            }
+            else -> {
+                Log.e(TAG, "Wrong flag!")
+            }
         }
     }
 
@@ -251,19 +350,14 @@ class NoteActivity : AppCompatActivity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        val id = noteViewModel.getId().value
-        val title = noteViewModel.getTitle().value
-        val body = noteViewModel.getBody().value
-        val color = noteViewModel.getColor().value
+        val n = noteViewModel.getNote()
 
-        if (id != null)
-            outState.putCharSequence(Constants.SAVE_STATE_ID, id)
-        if (title != null)
-            outState.putCharSequence(Constants.SAVE_STATE_TITLE, title)
-        if (body != null)
-            outState.putCharSequence(Constants.SAVE_STATE_BODY, body)
-        if (color != null)
-            outState.putInt(Constants.SAVE_STATE_COLOR, color)
+        if (n != null) {
+            outState.putCharSequence(Constants.SAVE_STATE_ID, n.id)
+            n.title?.let { outState.putCharSequence(Constants.SAVE_STATE_TITLE, it) }
+            n.body?.let { outState.putCharSequence(Constants.SAVE_STATE_BODY, it) }
+            n.color?.let { outState.putInt(Constants.SAVE_STATE_COLOR, it) }
+        }
 
         super.onSaveInstanceState(outState)
     }
