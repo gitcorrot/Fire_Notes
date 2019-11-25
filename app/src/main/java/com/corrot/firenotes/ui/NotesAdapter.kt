@@ -85,7 +85,8 @@ class NotesAdapter(
 
             override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
                 oldNotes[oldItemPosition].title == newNotes[newItemPosition].title &&
-                        oldNotes[oldItemPosition].body == newNotes[newItemPosition].body
+                        oldNotes[oldItemPosition].body == newNotes[newItemPosition].body &&
+                        oldNotes[oldItemPosition].color == newNotes[newItemPosition].color
         })
     }
 }

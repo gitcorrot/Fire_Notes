@@ -30,6 +30,7 @@ class NoteActivity : AppCompatActivity() {
     private lateinit var noteViewModel: NoteViewModel
 
     private var flag: Int = 0
+    private var color: Int = 0
     private var note: Note? = null
 
     private lateinit var toolbar: Toolbar
@@ -45,19 +46,19 @@ class NoteActivity : AppCompatActivity() {
         // Always read flag
         flag = intent.getIntExtra(Constants.FLAG_NOTE_KEY, 0)
 
+        // Initialize views
         toolbar = toolbar_note as Toolbar
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp)
         toolbar.title = "Add note"
         setSupportActionBar(toolbar)
 
-        noteViewModel = NoteViewModel()
-
         titleInputLayout = til_note_title
         bodyInputLayout = til_note_body
+        colorView = v_note_color
         fab = fab_note
 
-        // Set color on change
-        colorView = v_note_color
+        // Initialize viewModel
+        noteViewModel = NoteViewModel()
 
         // Set up observers
         noteViewModel.getColor().observe(this, Observer {
@@ -70,7 +71,7 @@ class NoteActivity : AppCompatActivity() {
             val id = savedInstanceState.getCharSequence(Constants.SAVE_STATE_ID)
             val title = savedInstanceState.getCharSequence(Constants.SAVE_STATE_TITLE)
             val body = savedInstanceState.getCharSequence(Constants.SAVE_STATE_BODY)
-            val color = savedInstanceState.getInt(Constants.SAVE_STATE_COLOR, 0)
+            color = savedInstanceState.getInt(Constants.SAVE_STATE_COLOR, 0)
 
             if (!id.isNullOrEmpty())
                 noteViewModel.setId(id.toString())
@@ -85,26 +86,28 @@ class NoteActivity : AppCompatActivity() {
                 bodyInputLayout.editText?.setText(body)
             }
 
-            if (color != 0)
+            if (color != 0) {
                 noteViewModel.setColor(color)
+            } else {
+                setDefaultColor()
+            }
         } else {
-            // Set default color
-            val color = colorView.context.getColor(R.color.colorSecondary)
-            noteViewModel.setColor(color)
-
-            // If there is no savedInstanceState -> retrieve intent data (flag and note)
+            // Try to retrieve intent bundle (if there is 'edit' flag
             val bundle = intent.extras
 
             bundle?.let { data ->
                 when (data.getInt(Constants.FLAG_NOTE_KEY)) {
                     Constants.FLAG_ADD_NOTE -> {
                         Log.d(TAG, "Opened NoteActivity with 'add note' flag")
+                        setDefaultColor()
                     }
                     Constants.FLAG_EDIT_NOTE -> {
                         Log.d(TAG, "Opened NoteActivity with 'edit note' flag")
                         note = getNoteFromBundle(data)
                         note?.let {
                             noteViewModel.setNote(it)
+                            // Update edit texts manually (can't be updated via observers, because
+                            // there are text watchers set
                             titleInputLayout.editText?.setText(it.title)
                             bodyInputLayout.editText?.setText(it.body)
                         }
@@ -116,7 +119,7 @@ class NoteActivity : AppCompatActivity() {
             }
         }
 
-        // Update user input
+        // Update user input in viewModel
         titleInputLayout.editText?.addTextChangedListener {
             noteViewModel.setTitle(it.toString())
         }
@@ -128,18 +131,37 @@ class NoteActivity : AppCompatActivity() {
         // Save on FAB clicked
         fab.setOnClickListener {
             // If title or body is not empty - add note to db
-            if (!noteViewModel.getTitle().value.isNullOrEmpty()
-                || !noteViewModel.getBody().value.isNullOrEmpty()
-            ) {
+            if (validateInput()) {
                 noteViewModel.addNoteToDatabase()
                 finish()
             } else {
-//                Snackbar.make(toolbar, "Empty note", Snackbar.LENGTH_SHORT).show()
                 Toast.makeText(this, "Can't add empty note", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
+    /**
+     * Function that sets color as default (colorSecondary)
+     */
+    private fun setDefaultColor() {
+        color = colorView.context.getColor(R.color.colorSecondary)
+        noteViewModel.setColor(color)
+    }
+
+    /**
+     * Function that validates user input. Checks if note's title or body is not null.
+     * Returns true if conditions are meet, else returns false.
+     * @return Boolean
+     */
+    private fun validateInput(): Boolean {
+        return (!noteViewModel.getTitle().value.isNullOrEmpty()
+                || !noteViewModel.getBody().value.isNullOrEmpty())
+    }
+
+    /**
+     * Function that retrieves Note from bundle
+     * @return Note?
+     */
     private fun getNoteFromBundle(b: Bundle): Note? {
         val id = b.getString(Constants.NOTE_ID_KEY)
 
@@ -170,20 +192,22 @@ class NoteActivity : AppCompatActivity() {
                 true
             }
             R.id.action_set_color -> {
-                // Set default color
-                var color = colorView.context.getColor(R.color.colorSecondary)
-                noteViewModel.setColor(color)
+                //
+                if (color == 0) color = -1
 
                 ColorPickerDialogBuilder
-                    .with(titleInputLayout.context)
+                    .with(colorView.context)
                     .setTitle("Choose color")
-                    .wheelType(ColorPickerView.WHEEL_TYPE.CIRCLE)
+                    .wheelType(ColorPickerView.WHEEL_TYPE.FLOWER)
                     .showBorder(true)
-                    .showColorPreview(true)
-                    .density(8)
+                    .showColorPreview(false)
+                    .density(6)
                     .noSliders()
                     .initialColor(color)
-                    .setOnColorChangedListener { color = it }
+                    .setOnColorChangedListener {
+                        Log.d(TAG, "selected color: $it")
+                        color = it
+                    }
                     .setPositiveButton("Ok") { _, _, _ ->
                         noteViewModel.setColor(color = color)
                     }
@@ -198,6 +222,10 @@ class NoteActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Function that is called when user press back button or back indicator from toolbar.
+     * Validates data and finishes activity if conditions are meet.
+     */
     private fun back() {
         currentFocus?.clearFocus()
 
