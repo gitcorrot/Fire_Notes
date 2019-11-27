@@ -25,5 +25,11 @@ class Constants {
 
         const val DRAWER_NOTES_ITEM = 1L
         const val DRAWER_LOG_OUT_ITEM = 2L
+
+        const val GOOGLE_SIGN_IN_RESULT_CODE = 11
+
+        const val FLAG_LOGIN_PROVIDER = "loginProviderFlag"
+        const val LOGIN_PROVIDER_EMAIL_PASSWORD = 1
+        const val LOGIN_PROVIDER_GOOGLE_ACCOUNT = 2
     }
 }

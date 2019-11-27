@@ -74,7 +74,7 @@ class NoteActivity : AppCompatActivity() {
             color = savedInstanceState.getInt(Constants.SAVE_STATE_COLOR, 0)
 
             if (!id.isNullOrEmpty())
-                noteViewModel.setId(id.toString())
+                noteViewModel.setNoteId(id.toString())
 
             if (!title.isNullOrEmpty()) {
                 noteViewModel.setTitle(title.toString())

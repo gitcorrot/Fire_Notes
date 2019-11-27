@@ -10,6 +10,7 @@ import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
 import com.corrot.firenotes.R
 import com.corrot.firenotes.utils.hideKeyboard
+import com.google.android.gms.common.SignInButton
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.textfield.TextInputLayout
@@ -17,6 +18,7 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.android.synthetic.main.fragment_sign_in.view.*
 import java.util.*
 import kotlin.concurrent.schedule
+
 
 class SignInFragment : Fragment() {
     companion object {
@@ -26,15 +28,16 @@ class SignInFragment : Fragment() {
 
     interface SignInListener {
         fun done()
+        fun signUpWithGoogleClicked()
         fun signUpClicked()
     }
 
-    private lateinit var mAuth: FirebaseAuth
     private lateinit var callback: SignInListener
 
     private lateinit var emailInputLayout: TextInputLayout
     private lateinit var passwordInputLayout: TextInputLayout
     private lateinit var signInButton: MaterialButton
+    private lateinit var googleSignInButton: SignInButton
     private lateinit var signUpButton: MaterialButton
     private lateinit var shadow: View
     private lateinit var progressBar: ProgressBar
@@ -48,6 +51,7 @@ class SignInFragment : Fragment() {
         emailInputLayout = view.til_sign_in_email
         passwordInputLayout = view.til_sign_in_password
         signInButton = view.btn_sign_in
+        googleSignInButton = view.btn_google_sign_in
         signUpButton = view.btn_open_sign_up
         shadow = view.v_sign_in_shadow
         progressBar = view.pb_sign_in
@@ -65,8 +69,13 @@ class SignInFragment : Fragment() {
             }
         }
 
+
         signUpButton.setOnClickListener {
             callback.signUpClicked()
+        }
+
+        googleSignInButton.setOnClickListener {
+            callback.signUpWithGoogleClicked()
         }
 
         return view
@@ -74,12 +83,6 @@ class SignInFragment : Fragment() {
 
     fun setSignInListener(callback: SignInListener) {
         this.callback = callback
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        mAuth = FirebaseAuth.getInstance()
     }
 
     // Returns true if email and password are OK, else returns false.
@@ -116,6 +119,7 @@ class SignInFragment : Fragment() {
     }
 
     private fun signIn(email: String, password: String) {
+        val mAuth = FirebaseAuth.getInstance()
         mAuth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 shadow.visibility = View.GONE
@@ -144,4 +148,5 @@ class SignInFragment : Fragment() {
                 }
             }
     }
+
 }

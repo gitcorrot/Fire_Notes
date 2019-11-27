@@ -16,20 +16,20 @@ class NoteViewModel : ViewModel() {
 
     private val firebaseRepository = FirebaseRepository()
 
-    private var id: String? = null
+    private var noteId: String? = null
     private var title: String? = null
-    private var body:String? = null
+    private var body: String? = null
     private var colorLiveData = MutableLiveData<Int>()
 
     var originalNote: Note? = null
 
 
-    fun setId(id: String) {
-        this.id = id
+    fun setNoteId(id: String) {
+        this.noteId = id
     }
 
-    fun getId(): String? {
-        return this.id
+    private fun getNoteId(): String? {
+        return this.noteId
     }
 
     fun setTitle(title: String) {
@@ -58,15 +58,15 @@ class NoteViewModel : ViewModel() {
     }
 
     fun setNote(n: Note) {
-        setId(n.id)
+        setNoteId(n.id)
         n.title?.let { setTitle(it) }
         n.body?.let { setBody(it) }
         n.color?.let { setColor(it) }
     }
 
     fun getNote(): Note? {
-        return if (!id.isNullOrEmpty()) {
-            val n = Note(id!!)
+        return if (!noteId.isNullOrEmpty()) {
+            val n = Note(noteId!!)
             n.title = getTitle()
             n.body = getBody()
             n.color = getColor().value
@@ -77,16 +77,16 @@ class NoteViewModel : ViewModel() {
     }
 
     fun addNoteToDatabase() {
-        val id = getId()
+        val noteId = getNoteId()
         val title = getTitle()
         val body = getBody()
         val color = getColor().value
         val date = Calendar.getInstance().timeInMillis
 
-        if (id.isNullOrEmpty()) {
+        if (noteId.isNullOrEmpty()) {
             firebaseRepository.addNoteToDatabase(title, body, color, date)
         } else {
-            firebaseRepository.editNoteFromDatabase(id, title, body, color, date)
+            firebaseRepository.editNoteFromDatabase(noteId, title, body, color, date)
         }
     }
 }

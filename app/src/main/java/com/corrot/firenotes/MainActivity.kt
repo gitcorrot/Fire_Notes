@@ -10,10 +10,11 @@ import androidx.fragment.app.FragmentManager
 import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.ui.MainFragment
 import com.corrot.firenotes.utils.Constants
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.bottomappbar.BottomAppBar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.mikepenz.materialdrawer.AccountHeaderBuilder
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.DrawerBuilder
@@ -32,65 +33,89 @@ class MainActivity : AppCompatActivity(),
         val TAG: String = MainActivity::class.java.simpleName
     }
 
-    private lateinit var mAuth: FirebaseAuth
     private lateinit var fragmentManager: FragmentManager
     private lateinit var fragmentContainer: FrameLayout
     private lateinit var drawer: Drawer
     private lateinit var toolbar: BottomAppBar
     private lateinit var fab: FloatingActionButton
 
+    private var userName: String? = null
+    private var userEmail: String? = null
+
+    private var loginProvider: Int = 0
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         // Firebase
-        mAuth = FirebaseAuth.getInstance()
+        val mAuth = FirebaseAuth.getInstance()
 
         // Fragments
         fragmentManager = supportFragmentManager
         fragmentContainer = fl_main_fragment_container
 
-        // If user is null (is not logged in) open signUpActivity
-        if (mAuth.currentUser == null) {
-            startAuthActivity()
-        } else {
-            val user: FirebaseUser = mAuth.currentUser!!
-            Log.d(TAG, "LOGGED AS: ${user.email.toString()}")
+        loginProvider = intent.getIntExtra(Constants.FLAG_LOGIN_PROVIDER, 0)
 
-            // Setting Toolbar
-            toolbar = toolbar_main as BottomAppBar
-            toolbar.setNavigationIcon(R.drawable.ic_menu_white_24dp)
-            toolbar.title = "Fire notes"
-            setSupportActionBar(toolbar)
-
-            // Create drawer
-            createDrawer(user)
-
-            // Floating Action Button
-            fab = fab_main
-            fab.setOnClickListener {
-                openNoteActivity(null, Constants.FLAG_ADD_NOTE)
+        when (loginProvider) {
+            Constants.LOGIN_PROVIDER_EMAIL_PASSWORD -> {
+                // User logged in with email and password
+                val user = mAuth.currentUser!!
+                userName = user.displayName
+                userEmail = user.email
+                Log.d(TAG, "LOGGED AS: ${user.uid}")
             }
-
-            // On first activity creation load mainFragment
-            if (savedInstanceState == null) {
-                val mainFragment = MainFragment()
-                mainFragment.setMainListener(this)
-                fragmentManager.beginTransaction()
-                    .add(fragmentContainer.id, mainFragment, Constants.MAIN_FRAGMENT_KEY)
-                    .commit()
-            } else {
-                // If activity is recreated check for opened fragments
-                // Checking mainFragment
-                var fragment = fragmentManager.findFragmentByTag(Constants.MAIN_FRAGMENT_KEY)
-                if (fragment != null) {
-                    (fragment as MainFragment).setMainListener(this)
+            Constants.LOGIN_PROVIDER_GOOGLE_ACCOUNT -> {
+                val user = GoogleSignIn.getLastSignedInAccount(this)
+                if (user != null) {
+                    userName = user.displayName
+                    userEmail = user.email
                 } else {
-                    // Checking addNoteFragment
-                    // TODO: check for remaining fragments
+                    // TODO: ERROR
+                    Log.e(TAG, "Wrong provider flag")
+                    startAuthActivity()
                 }
             }
+            else -> {
+
+            }
         }
+
+        // Setting Toolbar
+        toolbar = toolbar_main as BottomAppBar
+        toolbar.setNavigationIcon(R.drawable.ic_menu_white_24dp)
+        toolbar.title = "Fire notes"
+        setSupportActionBar(toolbar)
+
+        // Create drawer
+        createDrawer(userName, userEmail)
+
+        // Floating Action Button
+        fab = fab_main
+        fab.setOnClickListener {
+            openNoteActivity(null, Constants.FLAG_ADD_NOTE)
+        }
+
+        // On first activity creation load mainFragment
+        if (savedInstanceState == null) {
+            val mainFragment = MainFragment()
+            mainFragment.setMainListener(this)
+            fragmentManager.beginTransaction()
+                .add(fragmentContainer.id, mainFragment, Constants.MAIN_FRAGMENT_KEY)
+                .commit()
+        } else {
+            // If activity is recreated check for opened fragments
+            // Checking mainFragment
+            var fragment = fragmentManager.findFragmentByTag(Constants.MAIN_FRAGMENT_KEY)
+            if (fragment != null) {
+                (fragment as MainFragment).setMainListener(this)
+            } else {
+                // Checking addNoteFragment
+                // TODO: check for remaining fragments
+            }
+        }
+//        }
     }
 
     // TODO: It will be useful later when there will be more fragments
@@ -108,7 +133,7 @@ class MainActivity : AppCompatActivity(),
 //        }
 //    }
 
-    private fun createDrawer(user: FirebaseUser) {
+    private fun createDrawer(name: String?, email: String?) {
         val notesItem = PrimaryDrawerItem()
             .withIdentifier(Constants.DRAWER_NOTES_ITEM)
             .withName("Notes")
@@ -130,7 +155,7 @@ class MainActivity : AppCompatActivity(),
 
         val header = AccountHeaderBuilder()
             .withActivity(this)
-            .addProfiles(ProfileDrawerItem().withName(user.displayName).withEmail(user.email))
+            .addProfiles(ProfileDrawerItem().withName(name).withEmail(email))
             .withProfileImagesVisible(true)
             .withSelectionListEnabled(false)
             .withDividerBelowHeader(true)
@@ -146,13 +171,23 @@ class MainActivity : AppCompatActivity(),
 
     private fun startAuthActivity() {
         val intent = Intent(this, AuthActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+//        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
         finish()
     }
 
     private fun logOut() {
-        mAuth.signOut()
+        when (loginProvider) {
+            Constants.LOGIN_PROVIDER_EMAIL_PASSWORD -> {
+                FirebaseAuth.getInstance().signOut()
+            }
+            Constants.LOGIN_PROVIDER_GOOGLE_ACCOUNT -> {
+                GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut()
+            }
+            else -> {
+                Log.e(TAG, "Wrong provider flag")
+            }
+        }
         startAuthActivity()
     }
 
@@ -167,6 +202,7 @@ class MainActivity : AppCompatActivity(),
             bundle.putString(Constants.NOTE_TITLE_KEY, note.title)
             bundle.putString(Constants.NOTE_BODY_KEY, note.body)
             note.color?.let { bundle.putInt(Constants.NOTE_COLOR_KEY, it) }
+            // not necessary
             note.lastChanged?.let { bundle.putLong(Constants.NOTE_LAST_CHANGED_KEY, it) }
         }
 

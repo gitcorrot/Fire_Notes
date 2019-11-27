@@ -8,7 +8,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
-class FirebaseRepository {
+// TODO: Implement constructor or keep user id in some object
+class FirebaseRepository/*(id: String)*/{
     companion object {
         @JvmField
         val TAG: String = FirebaseRepository::class.java.simpleName
@@ -42,6 +43,7 @@ class FirebaseRepository {
             }
     }
 
+    // TODO: What if user is logged via Google account?
     fun editNoteFromDatabase(
         id: String,
         title: String?,
@@ -78,6 +80,7 @@ class FirebaseRepository {
         }
     }
 
+    // TODO: What if user is logged via Google account?
     fun addNoteToDatabase(
         title: String?,
         body: String?,
@@ -113,6 +116,7 @@ class FirebaseRepository {
         }
     }
 
+    // TODO: What if user is logged via Google account?
     fun addNotesListener(listener: ValueEventListener) {
         this.listener = listener
         auth.uid?.let { uid ->

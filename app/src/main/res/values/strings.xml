@@ -1,4 +1,6 @@
 <resources>
+    <string name="server_cient_id">757995393021-319oloj60u794c9slsbvbeajv03s0f9h.apps.googleusercontent.com</string>
+
     <string name="app_name">Fire Notes</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_auth">AuthActivity</string>
