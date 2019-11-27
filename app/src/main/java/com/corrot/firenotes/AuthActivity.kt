@@ -12,7 +12,9 @@ import com.corrot.firenotes.utils.Constants
 import com.google.android.gms.auth.api.signin.*
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -27,13 +29,18 @@ class AuthActivity : AppCompatActivity(),
         const val TAG = "AuthActivity"
     }
 
+    private lateinit var mGoogleSignInClient: GoogleSignInClient
+    private lateinit var mAuth: FirebaseAuth
+
     private lateinit var fragmentManager: FragmentManager
     private lateinit var fragmentContainer: FrameLayout
-    private lateinit var mGoogleSignInClient: GoogleSignInClient
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_auth)
+
+        mAuth = FirebaseAuth.getInstance()
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.server_cient_id))
@@ -42,75 +49,72 @@ class AuthActivity : AppCompatActivity(),
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso)
 
-        if (FirebaseAuth.getInstance().currentUser == null) {
-            // Check if google user is logged in
-            val sli = mGoogleSignInClient.silentSignIn()
+        if (mAuth.currentUser == null) {
+            // If user is not logged in load sign in fragment
+            fragmentManager = supportFragmentManager
+            fragmentContainer = fl_auth_fragment_container
 
-            if (sli.isSuccessful) {
-                // User is logged in
-                val account = sli.result
-                Log.d(TAG, "User logged via google account, id: ${account?.id}")
-                startMainActivity(Constants.LOGIN_PROVIDER_GOOGLE_ACCOUNT)
-            } else {
-                // User is during logging in
-                sli.addOnCompleteListener {
-                    if (!handleSignInResult(it)) {
-                        // If user is not logged in load sign in fragment
-                        fragmentManager = supportFragmentManager
-                        fragmentContainer = fl_auth_fragment_container
+            val signInFragment = SignInFragment()
+            signInFragment.setSignInListener(this)
 
-                        val signInFragment = SignInFragment()
-                        signInFragment.setSignInListener(this)
-
-                        val fragmentTransaction = fragmentManager.beginTransaction()
-                        fragmentTransaction
-                            .add(fragmentContainer.id, signInFragment)
-                            .commit()
-                    }
-                }
-            }
+            val fragmentTransaction = fragmentManager.beginTransaction()
+            fragmentTransaction
+                .add(fragmentContainer.id, signInFragment)
+                .commit()
         } else {
-            // If user is logged in (via email and password) proceed to MainActivity
-            Log.d(
-                TAG,
-                "Logged via email and password, UID: ${FirebaseAuth.getInstance().currentUser!!.uid}"
-            )
+            // If user is logged in proceed to MainActivity
+            Log.d(TAG, "Logged via email and password, UID: ${mAuth.currentUser!!.uid}")
             startMainActivity(Constants.LOGIN_PROVIDER_EMAIL_PASSWORD)
         }
     }
 
+    private fun signInWithGoogleAccount(account: GoogleSignInAccount) {
+        val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+
+        mAuth.signInWithCredential(credential).addOnCompleteListener {
+            if (it.isSuccessful) {
+                val user = mAuth.currentUser
+                Log.d(TAG, "Logged via google account, ID: ${user!!.uid}")
+
+                val ref = FirebaseDatabase.getInstance().reference
+                    .child(Constants.NOTE_KEY)
+                    .child(user.uid)
+
+                ref.addValueEventListener(object : ValueEventListener {
+                    override fun onCancelled(e: DatabaseError) {
+                        Log.e(TAG, "ValueEventListener cancelled", e.toException())
+                    }
+
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        if (snapshot.value == null) {
+                            // User is not in database -> add user
+                            FirebaseRepository()
+                                .createUser(
+                                    user.uid,
+                                    user.email,
+                                    user.displayName
+                                )
+                        }
+                    }
+                })
+                // TODO: Hide progress bar
+                startMainActivity(Constants.LOGIN_PROVIDER_GOOGLE_ACCOUNT)
+            } else {
+                Snackbar.make(
+                    this.fragmentContainer,
+                    "Authentication failed.",
+                    Snackbar.LENGTH_SHORT
+                )
+                Log.e(TAG, "Signing with credential failed", it.exception)
+            }
+        }
+    }
+
     private fun handleSignInResult(task: Task<GoogleSignInAccount>): Boolean {
+        // TODO: Show progress bar
         return try {
             val account = task.getResult(ApiException::class.java)
-            Log.d(TAG, "Logged via google account, ID: ${account!!.id}")
-
-
-
-
-
-            val ref = FirebaseDatabase.getInstance().reference
-                .child(Constants.NOTE_KEY)
-                .child(account.id!!)
-
-            ref.addValueEventListener(object : ValueEventListener {
-                override fun onCancelled(p0: DatabaseError) {
-                    Log.e(TAG, "ValueEventListener cancelled")
-                }
-
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    if (snapshot.value == null) {
-                        // User is not in database -> add user
-                        FirebaseRepository()
-                            .createUser(account.id!!, account.email, account.displayName)
-                    }
-                }
-            })
-
-
-
-
-
-            startMainActivity(Constants.LOGIN_PROVIDER_GOOGLE_ACCOUNT)
+            signInWithGoogleAccount(account!!)
             true
         } catch (e: ApiException) {
             if (e.statusCode == GoogleSignInStatusCodes.SIGN_IN_REQUIRED)
@@ -138,7 +142,6 @@ class AuthActivity : AppCompatActivity(),
             }
         }
     }
-
 
     /**
      *  Function that loads SignUpFragment

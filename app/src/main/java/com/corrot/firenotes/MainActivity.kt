@@ -33,6 +33,8 @@ class MainActivity : AppCompatActivity(),
         val TAG: String = MainActivity::class.java.simpleName
     }
 
+    private lateinit var mAuth: FirebaseAuth
+
     private lateinit var fragmentManager: FragmentManager
     private lateinit var fragmentContainer: FrameLayout
     private lateinit var drawer: Drawer
@@ -50,7 +52,7 @@ class MainActivity : AppCompatActivity(),
         setContentView(R.layout.activity_main)
 
         // Firebase
-        val mAuth = FirebaseAuth.getInstance()
+        mAuth = FirebaseAuth.getInstance()
 
         // Fragments
         fragmentManager = supportFragmentManager
@@ -58,28 +60,16 @@ class MainActivity : AppCompatActivity(),
 
         loginProvider = intent.getIntExtra(Constants.FLAG_LOGIN_PROVIDER, 0)
 
-        when (loginProvider) {
-            Constants.LOGIN_PROVIDER_EMAIL_PASSWORD -> {
-                // User logged in with email and password
-                val user = mAuth.currentUser!!
-                userName = user.displayName
-                userEmail = user.email
-                Log.d(TAG, "LOGGED AS: ${user.uid}")
-            }
-            Constants.LOGIN_PROVIDER_GOOGLE_ACCOUNT -> {
-                val user = GoogleSignIn.getLastSignedInAccount(this)
-                if (user != null) {
-                    userName = user.displayName
-                    userEmail = user.email
-                } else {
-                    // TODO: ERROR
-                    Log.e(TAG, "Wrong provider flag")
-                    startAuthActivity()
-                }
-            }
-            else -> {
-
-            }
+        if (mAuth.currentUser != null) {
+            // User logged in with email and password
+            val user = mAuth.currentUser!!
+            userName = user.displayName
+            userEmail = user.email
+            Log.d(TAG, "Logged as: ${user.uid}")
+        } else {
+            // TODO: ERROR
+            Log.e(TAG, "Wrong provider flag")
+            startAuthActivity()
         }
 
         // Setting Toolbar
@@ -177,15 +167,10 @@ class MainActivity : AppCompatActivity(),
     }
 
     private fun logOut() {
+        mAuth.signOut()
         when (loginProvider) {
-            Constants.LOGIN_PROVIDER_EMAIL_PASSWORD -> {
-                FirebaseAuth.getInstance().signOut()
-            }
             Constants.LOGIN_PROVIDER_GOOGLE_ACCOUNT -> {
                 GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut()
-            }
-            else -> {
-                Log.e(TAG, "Wrong provider flag")
             }
         }
         startAuthActivity()
