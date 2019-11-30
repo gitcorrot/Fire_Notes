@@ -63,4 +63,8 @@ class MainViewModel : ViewModel() {
             }
         })
     }
+
+    fun removeNoteWithId(id: String) {
+        firebaseRepository.removeNoteWithId(id)
+    }
 }

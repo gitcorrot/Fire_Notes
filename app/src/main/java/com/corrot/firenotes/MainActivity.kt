@@ -14,6 +14,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.bottomappbar.BottomAppBar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.mikepenz.materialdrawer.AccountHeaderBuilder
 import com.mikepenz.materialdrawer.Drawer
@@ -207,4 +208,20 @@ class MainActivity : AppCompatActivity(),
         openNoteActivity(note, Constants.FLAG_EDIT_NOTE)
     }
 
+    override fun onItemRemoved(pos: Int, note: Note) {
+        val mainFragment =
+            fragmentManager.findFragmentByTag(Constants.MAIN_FRAGMENT_KEY) as MainFragment
+
+        Snackbar.make(toolbar, "Note removed", Snackbar.LENGTH_LONG)
+            .addCallback(object : Snackbar.Callback() {
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    mainFragment.removeNoteWithId(note.id)
+                }
+            })
+            .setAnchorView(fab)
+            .setAction("Undo") {
+                mainFragment.addNoteBack(pos, note)
+            }
+            .show()
+    }
 }

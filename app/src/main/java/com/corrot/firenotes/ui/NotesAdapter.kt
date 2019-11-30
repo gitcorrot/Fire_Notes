@@ -8,15 +8,18 @@ import com.corrot.firenotes.R
 import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.utils.inflate
 import kotlinx.android.synthetic.main.item_note.view.*
+import java.util.Collections.swap
+
 
 class NotesAdapter(
-    private var notes: List<Note>,
+    private var notes: MutableList<Note>,
     private val itemClickListener: OnItemClickListener
 ) :
     RecyclerView.Adapter<NotesAdapter.NoteHolder>() {
 
     interface OnItemClickListener {
         fun onItemClicked(note: Note)
+//        fun onLongItemClicked()
     }
 
     class NoteHolder(v: View) : RecyclerView.ViewHolder(v) {
@@ -64,12 +67,46 @@ class NotesAdapter(
 
     fun setNotes(notes: List<Note>) {
         val diff = notifyNotesChanged(notes, this.notes)
-        this.notes = notes
+        this.notes.clear()
+        this.notes.addAll(notes)
         diff.dispatchUpdatesTo(this)
     }
 
     fun getNotes(): List<Note> {
         return this.notes
+    }
+
+    fun addNote(pos: Int, n: Note) {
+        notes.add(pos, n)
+        notifyItemInserted(pos)
+    }
+
+    fun removeNote(pos: Int) {
+        notes.removeAt(pos)
+        notifyItemRemoved(pos)
+    }
+
+    fun getNoteOnPosition(position: Int): Note {
+        return this.notes[position]
+    }
+
+    /**
+     * Function called to swap dragged items
+     */
+    fun swapItems(fromPosition: Int, toPosition: Int) {
+        if (fromPosition < toPosition) {
+            for (i in fromPosition until toPosition) {
+                swap(notes, i, i + 1)
+                notifyItemMoved(i, i + 1)
+            }
+        } else {
+            for (i in fromPosition downTo toPosition + 1) {
+                swap(notes, i, i - 1)
+                notifyItemMoved(i, i - 1)
+            }
+        }
+//        Collections.swap(notes, fromPosition, toPosition)
+//        notifyItemMoved(fromPosition, toPosition)
     }
 
     private fun notifyNotesChanged(

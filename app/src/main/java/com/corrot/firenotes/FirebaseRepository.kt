@@ -30,14 +30,8 @@ class FirebaseRepository {
             .setValue(user)
             .addOnCompleteListener { result ->
                 when (result.isSuccessful) {
-                    true -> {
-                        // TODO: result successful
-                        Log.d(TAG, "createUser:success")
-                    }
-                    false -> {
-                        // TODO: result failed
-                        Log.e(TAG, "createUser:failed")
-                    }
+                    true -> Log.d(TAG, "createUser:success")
+                    false -> Log.e(TAG, "createUser:failed")
                 }
             }
     }
@@ -65,14 +59,8 @@ class FirebaseRepository {
             ref.setValue(note)
                 .addOnCompleteListener { result ->
                     when (result.isSuccessful) {
-                        true -> {
-                            // TODO: result successful
-                            Log.d(TAG, "editNoteFromDatabase:success")
-                        }
-                        false -> {
-                            // TODO: result failed
-                            Log.e(TAG, "editNoteFromDatabase:failed")
-                        }
+                        true -> Log.d(TAG, "editNoteFromDatabase:success")
+                        false -> Log.e(TAG, "editNoteFromDatabase:failed")
                     }
                 }
         }
@@ -100,14 +88,8 @@ class FirebaseRepository {
             ref.setValue(note)
                 .addOnCompleteListener { result ->
                     when (result.isSuccessful) {
-                        true -> {
-                            // TODO: result successful
-                            Log.d(TAG, "addNoteToDatabase:success")
-                        }
-                        false -> {
-                            // TODO: result failed
-                            Log.e(TAG, "addNoteToDatabase:failed")
-                        }
+                        true -> Log.d(TAG, "addNoteToDatabase:success")
+                        false -> Log.e(TAG, "addNoteToDatabase:failed")
                     }
                 }
         }
@@ -121,6 +103,24 @@ class FirebaseRepository {
                 .child(Constants.NOTE_KEY)
                 .child(uid)
                 .addValueEventListener(listener)
+        }
+    }
+
+    fun removeNoteWithId(noteId: String) {
+        auth.uid?.let { uid ->
+            val ref = database
+                .reference
+                .child(Constants.NOTE_KEY)
+                .child(uid)
+                .child(noteId)
+
+            ref.removeValue()
+                .addOnCompleteListener { result ->
+                    when (result.isSuccessful) {
+                        true -> Log.d(TAG, "removeNoteWithId:success")
+                        false -> Log.e(TAG, "removeNoteWithId:failed")
+                    }
+                }
         }
     }
 

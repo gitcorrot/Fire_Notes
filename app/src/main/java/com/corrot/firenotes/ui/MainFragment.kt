@@ -7,8 +7,10 @@ import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import androidx.recyclerview.widget.StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
 import androidx.recyclerview.widget.StaggeredGridLayoutManager.VERTICAL
 import com.corrot.firenotes.R
 import com.corrot.firenotes.model.Note
@@ -23,7 +25,10 @@ class MainFragment : Fragment(), NotesAdapter.OnItemClickListener {
 
     interface MainListener {
         fun onItemClicked(note: Note)
+        fun onItemRemoved(pos: Int, note: Note)
     }
+
+    private lateinit var mainViewModel: MainViewModel
 
     private lateinit var callback: MainListener
     private lateinit var recyclerView: RecyclerView
@@ -38,15 +43,19 @@ class MainFragment : Fragment(), NotesAdapter.OnItemClickListener {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_main, container, false)
 
-        // RecyclerView displaying notes
+        // Set up recyclerView displaying notes
         recyclerView = view.rv_main
         layoutManager = StaggeredGridLayoutManager(2, VERTICAL)
+        layoutManager.gapStrategy = GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
         recyclerView.layoutManager = layoutManager
-        notesAdapter = NotesAdapter(emptyList(), this)
+        notesAdapter = NotesAdapter(arrayListOf(), this)
         recyclerView.adapter = notesAdapter
 
+        // Attach itemTouchHelper to recyclerView
+        attachTouchItemHelper()
+
         // Creating MainViewModel
-        val mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         // Passing Fragment's view as LifecycleOwner to avoid memory leaks
         mainViewModel.getAllNotes().observe(viewLifecycleOwner, Observer<List<Note>> {
             Log.d(TAG, "Updating notes adapter")
@@ -75,6 +84,48 @@ class MainFragment : Fragment(), NotesAdapter.OnItemClickListener {
 
     fun setMainListener(callback: MainListener) {
         this.callback = callback
+    }
+
+    fun addNoteBack(pos: Int, note: Note) {
+        notesAdapter.addNote(pos, note)
+    }
+
+    fun removeNoteWithId(id: String) {
+        mainViewModel.removeNoteWithId(id)
+    }
+
+    private fun attachTouchItemHelper() {
+        val itemTouchCallback = object : ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.LEFT
+                .or(ItemTouchHelper.RIGHT)
+                .or(ItemTouchHelper.UP)
+                .or(ItemTouchHelper.DOWN),
+            ItemTouchHelper.LEFT
+                .or(ItemTouchHelper.RIGHT)
+        ) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                notesAdapter.swapItems(viewHolder.adapterPosition, target.adapterPosition)
+                // TODO: swap notes indexes in db
+                return true
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                Log.d(TAG, "Trying to delete note on position: $position")
+
+                if (position != RecyclerView.NO_POSITION) {
+                    val n = notesAdapter.getNoteOnPosition(position)
+                    notesAdapter.removeNote(position)
+                    callback.onItemRemoved(position, n)
+                }
+            }
+        }
+        val itemTouchHelper = ItemTouchHelper(itemTouchCallback)
+        itemTouchHelper.attachToRecyclerView(recyclerView)
     }
 
     // Callback from NoteAdapter
