@@ -3,7 +3,9 @@ package com.corrot.firenotes
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.FrameLayout
+import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.FragmentManager
 import com.corrot.firenotes.ui.SignInFragment
@@ -34,6 +36,8 @@ class AuthActivity : AppCompatActivity(),
 
     private lateinit var fragmentManager: FragmentManager
     private lateinit var fragmentContainer: FrameLayout
+    private lateinit var shadow: View
+    private lateinit var progressBar: ProgressBar
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,14 +57,10 @@ class AuthActivity : AppCompatActivity(),
             // If user is not logged in load sign in fragment
             fragmentManager = supportFragmentManager
             fragmentContainer = fl_auth_fragment_container
+            shadow = v_auth_shadow
+            progressBar = pb_auth
 
-            val signInFragment = SignInFragment()
-            signInFragment.setSignInListener(this)
-
-            val fragmentTransaction = fragmentManager.beginTransaction()
-            fragmentTransaction
-                .add(fragmentContainer.id, signInFragment)
-                .commit()
+            loadSignInFragment()
         } else {
             // If user is logged in proceed to MainActivity
             Log.d(TAG, "Logged via email and password, UID: ${mAuth.currentUser!!.uid}")
@@ -68,6 +68,22 @@ class AuthActivity : AppCompatActivity(),
         }
     }
 
+    /**
+     * Function that starts main activity with provider flag as extra Int
+     * @param flag login provider flag
+     */
+    private fun startMainActivity(flag: Int) {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.putExtra(Constants.FLAG_LOGIN_PROVIDER, flag)
+        startActivity(intent)
+        finish()
+    }
+
+    /**
+     * Function that signs in to firebase using google account credential.
+     * Also checks if user exists in firebase database. If not it creates db entry.
+     * @param account GoogleSignInAccount from in GoogleSignInClient.signInIntent
+     */
     private fun signInWithGoogleAccount(account: GoogleSignInAccount) {
         val credential = GoogleAuthProvider.getCredential(account.idToken, null)
 
@@ -97,7 +113,7 @@ class AuthActivity : AppCompatActivity(),
                         }
                     }
                 })
-                // TODO: Hide progress bar
+                hideProgressBar()
                 startMainActivity(Constants.LOGIN_PROVIDER_GOOGLE_ACCOUNT)
             } else {
                 Snackbar.make(
@@ -111,7 +127,7 @@ class AuthActivity : AppCompatActivity(),
     }
 
     private fun handleSignInResult(task: Task<GoogleSignInAccount>): Boolean {
-        // TODO: Show progress bar
+        showProgressBar()
         return try {
             val account = task.getResult(ApiException::class.java)
             signInWithGoogleAccount(account!!)
@@ -123,6 +139,31 @@ class AuthActivity : AppCompatActivity(),
                 Log.e(TAG, "handleSignInResult:failed code = ${e.statusCode}")
             false
         }
+    }
+
+    private fun showProgressBar() {
+        if (progressBar.visibility != View.VISIBLE)
+            progressBar.visibility = View.VISIBLE
+        if (shadow.visibility != View.VISIBLE)
+            shadow.visibility = View.VISIBLE
+    }
+
+    private fun hideProgressBar() {
+        if (progressBar.visibility != View.GONE)
+            progressBar.visibility = View.GONE
+        if (shadow.visibility != View.GONE)
+            shadow.visibility = View.GONE
+    }
+
+    /**
+     * Function that loads SignInFragment (by 'replace' method)
+     */
+    private fun loadSignInFragment() {
+        val signInFragment = SignInFragment()
+        signInFragment.setSignInListener(this)
+        fragmentManager.beginTransaction()
+            .replace(fragmentContainer.id, signInFragment, Constants.SIGN_IN_FRAGMENT_KEY)
+            .commit()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -152,7 +193,7 @@ class AuthActivity : AppCompatActivity(),
 
         val fragmentTransaction = fragmentManager.beginTransaction()
         fragmentTransaction
-            .replace(fragmentContainer.id, signUpFragment)
+            .replace(fragmentContainer.id, signUpFragment, Constants.SIGN_UP_FRAGMENT_KEY)
             .commit()
     }
 
@@ -178,14 +219,13 @@ class AuthActivity : AppCompatActivity(),
         startActivityForResult(intent, Constants.GOOGLE_SIGN_IN_RESULT_CODE)
     }
 
-    /**
-     * Function that starts main activity with provider flag as extra Int
-     * @param flag login provider flag
-     */
-    private fun startMainActivity(flag: Int) {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.putExtra(Constants.FLAG_LOGIN_PROVIDER, flag)
-        startActivity(intent)
-        finish()
+    override fun onBackPressed() {
+        val signUpFragment = fragmentManager.findFragmentByTag(Constants.SIGN_UP_FRAGMENT_KEY)
+        if (signUpFragment != null) {
+            // If there is signUpFragment -> go back to signInFragment
+            loadSignInFragment()
+        } else {
+            super.onBackPressed()
+        }
     }
 }

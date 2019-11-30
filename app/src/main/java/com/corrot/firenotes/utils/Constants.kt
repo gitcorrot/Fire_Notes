@@ -6,6 +6,8 @@ class Constants {
         const val NOTE_KEY: String = "NOTE"
 
         const val MAIN_FRAGMENT_KEY = "mainFragment"
+        const val SIGN_UP_FRAGMENT_KEY = "signUpFragment"
+        const val SIGN_IN_FRAGMENT_KEY = "signInFragment"
 
         const val SAVE_STATE_ID = "saveStateId"
         const val SAVE_STATE_TITLE = "saveStateTitle"
