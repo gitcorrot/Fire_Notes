@@ -59,6 +59,7 @@ dependencies {
     // LiveData and ViewModel
     kapt "androidx.lifecycle:lifecycle-compiler:2.1.0"
     implementation "androidx.lifecycle:lifecycle-extensions:2.1.0"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:1.0.0-rc02"
 
     // ViewModelScope
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.2.0-rc02"

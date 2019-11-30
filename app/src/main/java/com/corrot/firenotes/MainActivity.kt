@@ -215,7 +215,8 @@ class MainActivity : AppCompatActivity(),
         Snackbar.make(toolbar, "Note removed", Snackbar.LENGTH_LONG)
             .addCallback(object : Snackbar.Callback() {
                 override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
-                    mainFragment.removeNoteWithId(note.id)
+                    if (event != DISMISS_EVENT_ACTION)
+                        mainFragment.removeNoteWithId(note.id)
                 }
             })
             .setAnchorView(fab)

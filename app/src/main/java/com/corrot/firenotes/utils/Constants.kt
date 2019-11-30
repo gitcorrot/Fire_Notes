@@ -9,11 +9,6 @@ class Constants {
         const val SIGN_UP_FRAGMENT_KEY = "signUpFragment"
         const val SIGN_IN_FRAGMENT_KEY = "signInFragment"
 
-        const val SAVE_STATE_ID = "saveStateId"
-        const val SAVE_STATE_TITLE = "saveStateTitle"
-        const val SAVE_STATE_BODY = "saveStateBody"
-        const val SAVE_STATE_COLOR = "saveStateColor"
-
         const val FLAG_ADD_NOTE = 1
         const val FLAG_EDIT_NOTE = 2
 
@@ -24,6 +19,7 @@ class Constants {
         const val NOTE_BODY_KEY = "noteBody"
         const val NOTE_COLOR_KEY = "noteColor"
         const val NOTE_LAST_CHANGED_KEY = "noteLastChanged"
+        const val ORIGINAL_NOTE_KEY = "originalNote"
 
         const val DRAWER_NOTES_ITEM = 1L
         const val DRAWER_LOG_OUT_ITEM = 2L
@@ -33,5 +29,7 @@ class Constants {
         const val FLAG_LOGIN_PROVIDER = "loginProviderFlag"
         const val LOGIN_PROVIDER_EMAIL_PASSWORD = 1
         const val LOGIN_PROVIDER_GOOGLE_ACCOUNT = 2
+
+        const val DEFAULT_COLOR = -13784
     }
 }
