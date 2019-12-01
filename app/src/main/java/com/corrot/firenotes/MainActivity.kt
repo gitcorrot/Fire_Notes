@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity(),
 
     private fun startAuthActivity() {
         val intent = Intent(this, AuthActivity::class.java)
-//        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
         startActivity(intent)
         finish()
     }
@@ -183,14 +183,8 @@ class MainActivity : AppCompatActivity(),
 
         bundle.putInt(Constants.FLAG_NOTE_KEY, flag)
 
-        if (note != null) {
-            bundle.putString(Constants.NOTE_ID_KEY, note.id)
-            bundle.putString(Constants.NOTE_TITLE_KEY, note.title)
-            bundle.putString(Constants.NOTE_BODY_KEY, note.body)
-            note.color?.let { bundle.putInt(Constants.NOTE_COLOR_KEY, it) }
-            // not necessary
-            note.lastChanged?.let { bundle.putLong(Constants.NOTE_LAST_CHANGED_KEY, it) }
-        }
+        if (note != null)
+            bundle.putParcelable(Constants.NOTE_KEY, note)
 
         intent.putExtras(bundle)
         startActivity(intent)

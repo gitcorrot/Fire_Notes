@@ -10,12 +10,9 @@ import com.corrot.firenotes.FirebaseRepository
 import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.utils.Constants
 import com.corrot.firenotes.utils.Constants.Companion.FLAG_NOTE_KEY
-import com.corrot.firenotes.utils.Constants.Companion.NOTE_BODY_KEY
-import com.corrot.firenotes.utils.Constants.Companion.NOTE_COLOR_KEY
-import com.corrot.firenotes.utils.Constants.Companion.NOTE_ID_KEY
-import com.corrot.firenotes.utils.Constants.Companion.NOTE_LAST_CHANGED_KEY
-import com.corrot.firenotes.utils.Constants.Companion.NOTE_TITLE_KEY
+import com.corrot.firenotes.utils.Constants.Companion.NOTE_KEY
 import com.corrot.firenotes.utils.Constants.Companion.ORIGINAL_NOTE_KEY
+import com.corrot.firenotes.utils.notifyObserver
 import java.util.*
 
 class NoteViewModel(private val handle: SavedStateHandle) : ViewModel() {
@@ -27,17 +24,8 @@ class NoteViewModel(private val handle: SavedStateHandle) : ViewModel() {
 
     private val firebaseRepository = FirebaseRepository()
 
-    private val _noteTitle: MutableLiveData<String> = handle.getLiveData<String>(NOTE_TITLE_KEY)
-    private val _noteBody: MutableLiveData<String> = handle.getLiveData<String>(NOTE_BODY_KEY)
-    private val _noteColor: MutableLiveData<Int> = handle.getLiveData<Int>(NOTE_COLOR_KEY)
-
-    val noteTitle: LiveData<String> = _noteTitle
-    val noteBody: LiveData<String> = _noteBody
-    val noteColor: LiveData<Int> = _noteColor
-
-    private var noteId: String?
-        get() = handle.get<String>(NOTE_ID_KEY)
-        set(value) = handle.set(NOTE_ID_KEY, value)
+    private val _note: MutableLiveData<Note> = handle.getLiveData<Note>(NOTE_KEY, Note(""))
+    val note: LiveData<Note> = _note
 
     private var originalNote: Note?
         get() = handle.get(ORIGINAL_NOTE_KEY)
@@ -48,74 +36,54 @@ class NoteViewModel(private val handle: SavedStateHandle) : ViewModel() {
         set(value) = handle.set(FLAG_NOTE_KEY, value)
 
 
+    private fun setNoteId(id: String?) {
+        if (!id.isNullOrEmpty())
+            _note.value?.let { it.id = id }
+    }
+
     fun setNoteTitle(title: String) {
-        if (title.isNotBlank()) {
-            _noteTitle.value = title
+        _note.value?.let {
+            it.title = title
+            _note.notifyObserver()
         }
     }
 
     fun setNoteBody(body: String) {
-        if (body.isNotBlank())
-            _noteBody.value = body
+        _note.value?.let {
+            it.body = body
+            _note.notifyObserver()
+        }
     }
 
     fun setNoteColor(color: Int) {
-        _noteColor.value = color
+        _note.value?.let {
+            it.color = color
+            _note.notifyObserver()
+        }
+    }
+
+    private fun setNoteLastChanged(lastChanged: Long) {
+        _note.value?.let { it.lastChanged = lastChanged }
     }
 
     private fun setNote(n: Note) {
-        noteId = n.id
-        n.title?.let { setNoteTitle(it) }
-        n.body?.let { setNoteBody(it) }
-        n.color?.let { setNoteColor(it) }
+        setNoteId(n.id)
+        setNoteTitle(n.title)
+        setNoteBody(n.body)
+        setNoteColor(n.color)
+        setNoteLastChanged(n.lastChanged)
     }
 
-    /**
-     * @return Note made from VM data
-     */
-    private fun getNote(): Note {
-        val n: Note
-
-        val id = noteId
-        n = if (!id.isNullOrEmpty()) {
-            Note(id)
-        } else {
-            Note("")
-        }
-
-        with(n) {
-            title = noteTitle.value
-            body = noteBody.value
-            color = noteColor.value
-        }
-
-        return n
-    }
+    //----------------------------------------------------------------------------------------------
 
     /**
      * @return returns true if note added without error, else false
      */
     private fun addNoteToDatabase(): Boolean {
-        val note = getNote()
-        note.lastChanged = Calendar.getInstance().timeInMillis
+        setNoteLastChanged(Calendar.getInstance().timeInMillis)
 
-        return if (validateInput(note.title, note.body)) {
-            if (note.id.isEmpty()) {
-                firebaseRepository.addNoteToDatabase(
-                    note.title,
-                    note.body,
-                    note.color,
-                    note.lastChanged
-                )
-            } else {
-                firebaseRepository.editNoteFromDatabase(
-                    note.id,
-                    note.title,
-                    note.body,
-                    note.color,
-                    note.lastChanged
-                )
-            }
+        return if (validateInput()) { // if true, note is not null
+            firebaseRepository.addNoteToDatabase(note.value!!)
             true
         } else {
             Log.e(TAG, "Can't add empty note")
@@ -125,27 +93,15 @@ class NoteViewModel(private val handle: SavedStateHandle) : ViewModel() {
 
 
     /**
-     * Function that validates user input. Checks if note's title or body is not null.
-     * @param title note title
-     * @param body note body
+     * Function that validates user input. Checks if note's title or body is not empty.
      * @return Returns true if title or body is not null, else returns false.
      */
-    private fun validateInput(title: String?, body: String?): Boolean {
-        /*  OR
-        1 | 1 = 1
-        1 | 0 = 1
-        0 | 1 = 1
-        0 | 0 = 0
-        */
-        return (!title.isNullOrEmpty() || !body.isNullOrEmpty())
+    private fun validateInput(): Boolean {
+        return if (note.value != null)
+            note.value!!.title.isNotEmpty() || note.value!!.body.isNotEmpty()
+        else
+            false
     }
-
-    /**
-     * Function that validates user input. Checks if note's title or body is not null.
-     * @return Returns true if title or body is not null, else returns false.
-     */
-    private fun validateInput(): Boolean =
-        !noteTitle.value.isNullOrEmpty() || !noteBody.value.isNullOrEmpty()
 
 
     /**
@@ -153,16 +109,16 @@ class NoteViewModel(private val handle: SavedStateHandle) : ViewModel() {
      * @return If changes were made returns true, else returns false
      */
     private fun checkForChanges(): Boolean {
-        val note = getNote()
         return if (originalNote != null) {
             // TODO: make comparator
-            originalNote!!.title != note.title
-                    || originalNote!!.body != note.body
-                    || originalNote!!.color != note.color
+            originalNote!!.title != note.value?.title
+                    || originalNote!!.body != note.value?.body
+                    || originalNote!!.color != note.value?.color
         } else {
             false
         }
     }
+
 
     /**
      * Function that retrieves Note from Bundle and update ViewModel
@@ -171,17 +127,11 @@ class NoteViewModel(private val handle: SavedStateHandle) : ViewModel() {
     fun retrieveDataFromBundle(b: Bundle?) {
         b?.let { data ->
             when (data.getInt(FLAG_NOTE_KEY)) {
-                Constants.FLAG_ADD_NOTE -> {
+                Constants.FLAG_ADD_NOTE ->
                     Log.d(TAG, "Opened NoteActivity with 'add note' flag")
-                    setDefaultColor()
-                }
                 Constants.FLAG_EDIT_NOTE -> {
                     Log.d(TAG, "Opened NoteActivity with 'edit note' flag")
-                    val note = getNoteFromBundle(data)
-                    note?.let { n ->
-                        setNote(n)
-                        originalNote = n
-                    }
+                    getNoteFromBundle(data)
                 }
                 else -> {
                     Log.e(TAG, "Opened NoteActivity with no flag")
@@ -190,32 +140,18 @@ class NoteViewModel(private val handle: SavedStateHandle) : ViewModel() {
         }
     }
 
+
     /**
      * Function that retrieves Note from bundle
      * @return If Note is not null returns Note, else null
      */
-    private fun getNoteFromBundle(b: Bundle): Note? {
-        val id = b.getString(NOTE_ID_KEY)
-
-        return if (!id.isNullOrEmpty()) {
-            val note = Note(id)
-            note.title = b.getString(NOTE_TITLE_KEY)
-            note.body = b.getString(NOTE_BODY_KEY)
-            note.color = b.getInt(NOTE_COLOR_KEY)
-            note.lastChanged = b.getLong(NOTE_LAST_CHANGED_KEY)
-
-            note
-        } else {
-            // Should never get there
-            Log.e(TAG, "Note id must not be null")
-            null
+    private fun getNoteFromBundle(b: Bundle) {
+        b.getParcelable<Note>(NOTE_KEY)?.let {
+            originalNote = it
+            setNote(it)
         }
     }
 
-    /**
-     * Function that sets color as default (colorSecondary)
-     */
-    private fun setDefaultColor() = setNoteColor(Constants.DEFAULT_COLOR)
 
     /**
      * Function that is called when user clicks floating action button.

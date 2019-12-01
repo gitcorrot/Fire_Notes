@@ -1,15 +1,16 @@
 package com.corrot.firenotes.model
 
 import android.os.Parcelable
+import com.corrot.firenotes.utils.Constants
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class Note(
-    val id: String,
-    var title: String? = "",
-    var body: String? = "",
-    var color: Int? = -1,
-    var lastChanged: Long? = 0
+    var id: String,
+    var title: String = "",
+    var body: String = "",
+    var color: Int = Constants.DEFAULT_COLOR,
+    var lastChanged: Long = 0
 ) : Parcelable {
     // empty constructor needed for data deserialization
     constructor() : this(id = "")

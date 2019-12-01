@@ -36,54 +36,23 @@ class FirebaseRepository {
             }
     }
 
-    fun editNoteFromDatabase(
-        id: String,
-        title: String?,
-        body: String?,
-        color: Int?,
-        lastChanged: Long?
-    ) {
+    fun addNoteToDatabase(note: Note) {
         auth.uid?.let { uid ->
-            val ref = database
-                .reference
-                .child(Constants.NOTE_KEY)
-                .child(uid)
-                .child(id)
 
-            val note = Note(id)
-            note.title = title
-            note.body = body
-            note.color = color
-            note.lastChanged = lastChanged
+            val ref = if (note.id.isEmpty()) {
+                database.reference
+                    .child(Constants.NOTE_KEY)
+                    .child(uid)
+                    .push()
 
-            ref.setValue(note)
-                .addOnCompleteListener { result ->
-                    when (result.isSuccessful) {
-                        true -> Log.d(TAG, "editNoteFromDatabase:success")
-                        false -> Log.e(TAG, "editNoteFromDatabase:failed")
-                    }
-                }
-        }
-    }
+            } else {
+                database.reference
+                    .child(Constants.NOTE_KEY)
+                    .child(uid)
+                    .child(note.id)
+            }
 
-    fun addNoteToDatabase(
-        title: String?,
-        body: String?,
-        color: Int?,
-        lastChanged: Long?
-    ) {
-        auth.uid?.let { uid ->
-            val ref = database
-                .reference
-                .child(Constants.NOTE_KEY)
-                .child(uid)
-                .push()
-
-            val note = Note(ref.key!!)
-            note.title = title
-            note.body = body
-            note.color = color
-            note.lastChanged = lastChanged
+            if (note.id.isEmpty()) note.id = ref.key!!
 
             ref.setValue(note)
                 .addOnCompleteListener { result ->

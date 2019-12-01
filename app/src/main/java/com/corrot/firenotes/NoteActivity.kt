@@ -2,16 +2,15 @@ package com.corrot.firenotes
 
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.Observer
 import androidx.lifecycle.SavedStateViewModelFactory
 import androidx.lifecycle.ViewModelProviders
 import com.corrot.firenotes.utils.Constants
+import com.corrot.firenotes.utils.afterTextChanged
 import com.corrot.firenotes.viewmodel.NoteViewModel
 import com.flask.colorpicker.ColorPickerView
 import com.flask.colorpicker.builder.ColorPickerDialogBuilder
@@ -42,21 +41,18 @@ class NoteActivity : AppCompatActivity() {
         val toolbar = toolbar_note as BottomAppBar
         toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white_24dp)
         setSupportActionBar(toolbar)
+        val shape = v_note_color.background as GradientDrawable
 
-        // Set up observers
-        noteViewModel.noteColor.observe(this, Observer {
-            val shape = v_note_color.background as GradientDrawable
-            shape.setColor(it)
-        })
+        // Set observer
+        noteViewModel.note.observe(this, Observer {
+            if (til_note_title.editText?.text.toString() != it.title)
+                til_note_title.editText?.setText(it.title)
 
-        noteViewModel.noteTitle.observe(this, Observer {
-            if (til_note_title.editText?.text.toString() != it)
-                til_note_title.editText?.setText(it)
-        })
+            if (til_note_body.editText?.text.toString() != it.body)
+                til_note_body.editText?.setText(it.body)
 
-        noteViewModel.noteBody.observe(this, Observer {
-            if (til_note_body.editText?.text.toString() != it)
-                til_note_body.editText?.setText(it)
+            if (shape.color?.defaultColor != it.color)
+                shape.setColor(it.color)
         })
 
         // Try to retrieve intent bundle
@@ -66,14 +62,13 @@ class NoteActivity : AppCompatActivity() {
         }
 
         // Update user input in viewModel
-        til_note_title.editText?.addTextChangedListener {
-            noteViewModel.setNoteTitle(it.toString())
+        til_note_title.editText?.afterTextChanged {
+            noteViewModel.setNoteTitle(it)
         }
 
-        til_note_body.editText?.addTextChangedListener {
-            noteViewModel.setNoteBody(it.toString())
+        til_note_body.editText?.afterTextChanged {
+            noteViewModel.setNoteBody(it)
         }
-
 
         fab_note.setOnClickListener {
             if (noteViewModel.onFabClicked()) {
@@ -97,13 +92,12 @@ class NoteActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                back()
+                onBackPressed()
                 true
             }
             R.id.action_set_color -> {
                 var color = -1
-                noteViewModel.noteColor.value?.let { color = it }
-                if (color == 0) color = -1
+                noteViewModel.note.value?.let { color = it.color } //TODO: refactor it
 
                 ColorPickerDialogBuilder
                     .with(v_note_color.context)
@@ -114,16 +108,9 @@ class NoteActivity : AppCompatActivity() {
                     .density(8)
                     .noSliders()
                     .initialColor(color)
-                    .setOnColorChangedListener {
-                        Log.d(TAG, "selected color: $it")
-                        color = it
-                    }
-                    .setPositiveButton("Ok") { _, _, _ ->
-                        noteViewModel.setNoteColor(color)
-                    }
-                    .setNegativeButton("Cancel") { dialog, _ ->
-                        dialog.cancel()
-                    }
+                    .setOnColorChangedListener { color = it }
+                    .setPositiveButton("Ok") { _, _, _ -> noteViewModel.setNoteColor(color) }
+                    .setNegativeButton("Cancel") { dialog, _ -> dialog.cancel() }
                     .build()
                     .show()
                 true
@@ -133,10 +120,6 @@ class NoteActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        back()
-    }
-
-    private fun back() {
         currentFocus?.clearFocus()
 
         if (noteViewModel.onBackClicked()) {
