@@ -9,17 +9,14 @@ class Constants {
         const val SIGN_UP_FRAGMENT_KEY = "signUpFragment"
         const val SIGN_IN_FRAGMENT_KEY = "signInFragment"
 
+        const val FLAG_NOTE_KEY = "noteFlag"
         const val FLAG_ADD_NOTE = 1
         const val FLAG_EDIT_NOTE = 2
 
-        const val FLAG_NOTE_KEY = "noteFlag"
-
-        const val NOTE_ID_KEY = "noteId"
-        const val NOTE_TITLE_KEY = "noteTitle"
-        const val NOTE_BODY_KEY = "noteBody"
-        const val NOTE_COLOR_KEY = "noteColor"
-        const val NOTE_LAST_CHANGED_KEY = "noteLastChanged"
         const val ORIGINAL_NOTE_KEY = "originalNote"
+        const val ALL_NOTES_KEY = "allNotes"
+        const val IS_LOADING_KEY = "isLoading"
+        const val SNACKBAR_MESSAGE_KEY = "snackbarMessage"
 
         const val DRAWER_NOTES_ITEM = 1L
         const val DRAWER_LOG_OUT_ITEM = 2L

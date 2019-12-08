@@ -4,6 +4,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.corrot.firenotes.R
 import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.utils.inflate
@@ -19,6 +20,7 @@ class NotesAdapter(
 
     interface OnItemClickListener {
         fun onItemClicked(note: Note)
+        fun onPinUpClicked(note: Note)
 //        fun onLongItemClicked()
     }
 
@@ -27,6 +29,7 @@ class NotesAdapter(
         private val titleView = v.tv_item_note_title
         private val bodyView = v.tv_item_note_body
         private val colorView = v.v_item_note_color
+        private val pinUpView = v.ib_item_pin_up
 
         fun bind(n: Note, clickListener: OnItemClickListener) {
 
@@ -34,22 +37,36 @@ class NotesAdapter(
                 clickListener.onItemClicked(n)
             }
 
-            if (!n.title.isNullOrEmpty()) {
+            pinUpView.setOnClickListener {
+                clickListener.onPinUpClicked(n)
+            }
+
+            if (n.title.isNotEmpty()) {
                 titleView.text = n.title
                 titleView.visibility = View.VISIBLE
             } else {
                 titleView.visibility = View.GONE
             }
 
-            if (!n.body.isNullOrEmpty()) {
+            if (n.body.isNotEmpty()) {
                 bodyView.text = n.body
                 bodyView.visibility = View.VISIBLE
             } else {
                 bodyView.visibility = View.GONE
             }
 
-            if (n.color != null) {
-                colorView.background.setTint(n.color!!)
+            if (n.color != 0) {
+                colorView.background.setTint(n.color)
+            }
+
+            if (n.pinned) {
+                Glide.with(pinUpView)
+                    .load(R.drawable.ic_pin_filled)
+                    .into(pinUpView)
+            } else {
+                Glide.with(pinUpView)
+                    .load(R.drawable.ic_pin_unfilled)
+                    .into(pinUpView)
             }
         }
     }
@@ -123,6 +140,7 @@ class NotesAdapter(
             override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
                 oldNotes[oldItemPosition].title == newNotes[newItemPosition].title &&
                         oldNotes[oldItemPosition].body == newNotes[newItemPosition].body &&
+                        oldNotes[oldItemPosition].pinned == newNotes[newItemPosition].pinned &&
                         oldNotes[oldItemPosition].color == newNotes[newItemPosition].color
         })
     }

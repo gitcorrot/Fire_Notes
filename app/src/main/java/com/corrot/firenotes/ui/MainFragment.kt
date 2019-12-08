@@ -1,20 +1,26 @@
 package com.corrot.firenotes.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.*
-import android.widget.ProgressBar
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
+import androidx.lifecycle.SavedStateViewModelFactory
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.recyclerview.widget.StaggeredGridLayoutManager.GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
 import androidx.recyclerview.widget.StaggeredGridLayoutManager.VERTICAL
+import com.corrot.firenotes.NoteActivity
 import com.corrot.firenotes.R
 import com.corrot.firenotes.model.Note
+import com.corrot.firenotes.utils.Constants
+import com.corrot.firenotes.utils.Constants.Companion.FLAG_EDIT_NOTE
 import com.corrot.firenotes.viewmodel.MainViewModel
+import com.google.android.material.snackbar.Snackbar
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_main.view.*
 
 class MainFragment : Fragment(), NotesAdapter.OnItemClickListener {
@@ -23,19 +29,8 @@ class MainFragment : Fragment(), NotesAdapter.OnItemClickListener {
         val TAG: String = MainFragment::class.java.simpleName
     }
 
-    interface MainListener {
-        fun onItemClicked(note: Note)
-        fun onItemRemoved(pos: Int, note: Note)
-    }
-
     private lateinit var mainViewModel: MainViewModel
-
-    private lateinit var callback: MainListener
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var layoutManager: StaggeredGridLayoutManager
     private lateinit var notesAdapter: NotesAdapter
-    private lateinit var shadow: View
-    private lateinit var progressBar: ProgressBar
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -44,57 +39,53 @@ class MainFragment : Fragment(), NotesAdapter.OnItemClickListener {
         val view = inflater.inflate(R.layout.fragment_main, container, false)
 
         // Set up recyclerView displaying notes
-        recyclerView = view.rv_main
-        layoutManager = StaggeredGridLayoutManager(2, VERTICAL)
+        val layoutManager = StaggeredGridLayoutManager(2, VERTICAL)
+
         layoutManager.gapStrategy = GAP_HANDLING_MOVE_ITEMS_BETWEEN_SPANS
-        recyclerView.layoutManager = layoutManager
         notesAdapter = NotesAdapter(arrayListOf(), this)
-        recyclerView.adapter = notesAdapter
+        view.rv_main.layoutManager = layoutManager
+        view.rv_main.adapter = notesAdapter
 
         // Attach itemTouchHelper to recyclerView
-        attachTouchItemHelper()
+        attachTouchItemHelper(view.rv_main)
 
         // Creating MainViewModel
-        mainViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        activity?.let {
+            val factory = SavedStateViewModelFactory(it.application, this)
+            mainViewModel =
+                ViewModelProviders.of(this, factory).get(MainViewModel::class.java)
+        }
+
         // Passing Fragment's view as LifecycleOwner to avoid memory leaks
-        mainViewModel.getAllNotes().observe(viewLifecycleOwner, Observer<List<Note>> {
+        mainViewModel.allNotes.observe(viewLifecycleOwner, Observer<List<Note>> {
             Log.d(TAG, "Updating notes adapter")
             notesAdapter.setNotes(it)
         })
 
         // Show / Hide loading bar
-        shadow = view.v_main_shadow
-        progressBar = view.pb_main
-        // Passing Fragment's view as LifecycleOwner to avoid memory leaks
-        mainViewModel.isLoading().observe(viewLifecycleOwner, Observer {
+        mainViewModel.dataLoading.observe(viewLifecycleOwner, Observer {
             when (it) {
                 true -> {
-                    shadow.visibility = View.VISIBLE
-                    progressBar.visibility = View.VISIBLE
+                    view.v_main_shadow.visibility = View.VISIBLE
+                    view.pb_main.visibility = View.VISIBLE
                 }
                 false -> {
-                    shadow.visibility = View.GONE
-                    progressBar.visibility = View.GONE
+                    view.v_main_shadow.visibility = View.GONE
+                    view.pb_main.visibility = View.GONE
                 }
             }
+        })
+
+        mainViewModel.snackBarMessage.observe(viewLifecycleOwner, Observer { msg ->
+            Snackbar.make(requireActivity().fab_main, msg, Snackbar.LENGTH_SHORT)
+                .setAnchorView(requireActivity().fab_main)
+                .show()
         })
 
         return view
     }
 
-    fun setMainListener(callback: MainListener) {
-        this.callback = callback
-    }
-
-    fun addNoteBack(pos: Int, note: Note) {
-        notesAdapter.addNote(pos, note)
-    }
-
-    fun removeNoteWithId(id: String) {
-        mainViewModel.removeNoteWithId(id)
-    }
-
-    private fun attachTouchItemHelper() {
+    private fun attachTouchItemHelper(recyclerView: RecyclerView) {
         val itemTouchCallback = object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.LEFT
                 .or(ItemTouchHelper.RIGHT)
@@ -118,20 +109,25 @@ class MainFragment : Fragment(), NotesAdapter.OnItemClickListener {
                 Log.d(TAG, "Trying to delete note on position: $position")
 
                 if (position != RecyclerView.NO_POSITION) {
-                    val n = notesAdapter.getNoteOnPosition(position)
-                    notesAdapter.removeNote(position)
-                    callback.onItemRemoved(position, n)
+                    onItemRemoved(position, notesAdapter.getNoteOnPosition(position))
                 }
             }
         }
-        val itemTouchHelper = ItemTouchHelper(itemTouchCallback)
-        itemTouchHelper.attachToRecyclerView(recyclerView)
+        ItemTouchHelper(itemTouchCallback).attachToRecyclerView(recyclerView)
     }
 
     // Callback from NoteAdapter
     override fun onItemClicked(note: Note) {
-        // Call MainActivity back with note
-        this.callback.onItemClicked(note)
+        val intent = Intent(context, NoteActivity::class.java)
+        val bundle = Bundle()
+        bundle.putInt(Constants.FLAG_NOTE_KEY, FLAG_EDIT_NOTE)
+        bundle.putParcelable(Constants.NOTE_KEY, note)
+        intent.putExtras(bundle)
+        startActivity(intent)
+    }
+
+    override fun onPinUpClicked(note: Note) {
+        mainViewModel.pinUpNote(note)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -139,17 +135,30 @@ class MainFragment : Fragment(), NotesAdapter.OnItemClickListener {
         super.onCreateOptionsMenu(menu, inflater)
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            android.R.id.home -> {
-                // TODO: show menu
-                true
+
+    fun onItemRemoved(pos: Int, note: Note) {
+
+        notesAdapter.removeNote(pos)
+
+        // TODO: UI problem:
+        //  1. removing first note from adapter
+        //  2. removing second note from adapter
+        //  3. snackbar dismissed -> delete first note from db and notify adapter to update
+        //  4. adapter adds second deleted note back, because of db changes listener
+        //  5. snackbar dismissed -> delete second note from db and notify adapter to update
+
+        Snackbar.make(requireActivity().fab_main, "Note removed", Snackbar.LENGTH_LONG)
+            .addCallback(object : Snackbar.Callback() {
+                override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                    if (event != DISMISS_EVENT_ACTION)
+                        mainViewModel.removeNoteWithId(note.id)
+                }
+            })
+            .setAnchorView(requireActivity().fab_main)
+            .setAction("Undo") {
+                // retrieve note when user delete it and click 'undo' action
+                notesAdapter.addNote(pos, note)
             }
-            R.id.action_options -> {
-                // TODO: show options
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
+            .show()
     }
 }

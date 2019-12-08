@@ -10,6 +10,7 @@ data class Note(
     var title: String = "",
     var body: String = "",
     var color: Int = Constants.DEFAULT_COLOR,
+    var pinned: Boolean = false,
     var lastChanged: Long = 0
 ) : Parcelable {
     // empty constructor needed for data deserialization

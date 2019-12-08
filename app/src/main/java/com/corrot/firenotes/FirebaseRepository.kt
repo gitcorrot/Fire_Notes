@@ -4,6 +4,7 @@ import android.util.Log
 import com.corrot.firenotes.model.Note
 import com.corrot.firenotes.model.User
 import com.corrot.firenotes.utils.Constants
+import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
@@ -71,11 +72,12 @@ class FirebaseRepository {
                 .reference
                 .child(Constants.NOTE_KEY)
                 .child(uid)
+                .orderByChild("pinned")
                 .addValueEventListener(listener)
         }
     }
 
-    fun removeNoteWithId(noteId: String) {
+    fun removeNoteWithId(noteId: String, listener: OnCompleteListener<Void>) {
         auth.uid?.let { uid ->
             val ref = database
                 .reference
@@ -84,12 +86,21 @@ class FirebaseRepository {
                 .child(noteId)
 
             ref.removeValue()
-                .addOnCompleteListener { result ->
-                    when (result.isSuccessful) {
-                        true -> Log.d(TAG, "removeNoteWithId:success")
-                        false -> Log.e(TAG, "removeNoteWithId:failed")
-                    }
-                }
+                .addOnCompleteListener(listener)
+        }
+    }
+
+    fun pinUpNote(note: Note, listener: OnCompleteListener<Void>) {
+        auth.uid?.let { uid ->
+            val ref = database
+                .reference
+                .child(Constants.NOTE_KEY)
+                .child(uid)
+                .child(note.id)
+                .child("pinned")
+
+            ref.setValue(!note.pinned)
+                .addOnCompleteListener(listener)
         }
     }
 
